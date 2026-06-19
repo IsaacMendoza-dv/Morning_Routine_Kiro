@@ -703,13 +703,7 @@ document.getElementById('taskList').addEventListener('click', async e => {
     t.done = !t.done
     render()
     await patchTask(id, { done: t.done })
-    // sync daily_log progress
-    const today = new Date().toISOString().slice(0, 10)
-    const { data: { user } } = await sb.auth.getUser()
-    await sb.from('daily_log').upsert(
-      { user_id: user.id, date: today, tasks_total: tasks.length, tasks_done: tasks.filter(t=>t.done).length },
-      { onConflict: 'user_id,date' }
-    )
+    await logDay({ tasks_total: tasks.length, tasks_done: tasks.filter(t=>t.done).length })
   }
 
   if (del) {
@@ -777,7 +771,17 @@ window.resetDay = async function() {
 }
 
 // ── Mood ─────────────────────────────────────────────────────────────────────
-async function loadMood() {
+async function logDay(fields) {
+  const today = new Date().toISOString().slice(0, 10)
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return
+  const { data: existing } = await sb.from('daily_log').select('id').eq('user_id', user.id).eq('date', today).maybeSingle()
+  if (existing) {
+    await sb.from('daily_log').update(fields).eq('id', existing.id)
+  } else {
+    await sb.from('daily_log').insert({ user_id: user.id, date: today, ...fields })
+  }
+}
   const today = new Date().toISOString().slice(0, 10)
   const { data } = await sb.from('daily_log').select('mood').eq('date', today).maybeSingle()
   if (data?.mood) applyMoodUI(data.mood)
@@ -796,16 +800,10 @@ function applyMoodUI(mood, locked = true) {
 
 document.querySelectorAll('.mood-btn').forEach(btn => {
   btn.addEventListener('click', async () => {
-    // prevent double-click race
     if (btn.disabled) return
     document.querySelectorAll('.mood-btn').forEach(b => b.disabled = true)
-    const mood  = btn.dataset.mood
-    const today = new Date().toISOString().slice(0, 10)
-    const { data: { user } } = await sb.auth.getUser()
-    await sb.from('daily_log').upsert(
-      { user_id: user.id, date: today, mood, tasks_total: tasks.length, tasks_done: tasks.filter(t=>t.done).length },
-      { onConflict: 'user_id,date' }
-    )
+    const mood = btn.dataset.mood
+    await logDay({ mood, tasks_total: tasks.length, tasks_done: tasks.filter(t=>t.done).length })
     applyMoodUI(mood, true)
   })
 })
