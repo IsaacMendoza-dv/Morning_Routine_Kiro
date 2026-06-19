@@ -368,9 +368,9 @@ async function loadTasks() {
   const { data, error } = await sb.from('tasks').select('*').order('position')
   if (error) { console.error(error); return }
   if (data.length === 0) {
-    // first login — seed default tasks
+    const { data: { user } } = await sb.auth.getUser()
     const { data: inserted } = await sb.from('tasks')
-      .insert(DEFAULT_TASKS.map(t => ({ ...t, user_id: (await sb.auth.getUser()).data.user.id })))
+      .insert(DEFAULT_TASKS.map(t => ({ ...t, user_id: user.id })))
       .select()
     tasks = inserted || []
   } else {
