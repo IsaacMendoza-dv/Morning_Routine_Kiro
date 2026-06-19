@@ -337,21 +337,24 @@ sb.auth.onAuthStateChange((_e, session) => {
 
 document.getElementById('btnSendLink').addEventListener('click', async () => {
   const email = document.getElementById('emailInput').value.trim()
-  if (!email) return
-  const btn = document.getElementById('btnSendLink')
   const msg = document.getElementById('authMsg')
+  if (!email) { msg.textContent = 'ingresa tu email'; msg.className = 'auth-msg err'; return }
+  const btn = document.getElementById('btnSendLink')
   btn.disabled = true
   btn.textContent = 'enviando...'
-  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
-  if (error) {
-    msg.textContent = error.message
-    msg.className = 'auth-msg err'
-    btn.disabled = false
-    btn.textContent = 'enviar link →'
-  } else {
+  msg.textContent = ''
+  msg.className = 'auth-msg'
+  try {
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
+    if (error) throw error
     document.getElementById('authForm').style.display = 'none'
     document.getElementById('sentEmailLabel').textContent = email
     document.getElementById('authSent').classList.add('visible')
+  } catch (err) {
+    msg.textContent = err.message || 'error al enviar — intenta de nuevo'
+    msg.className = 'auth-msg err'
+    btn.disabled = false
+    btn.textContent = 'enviar link →'
   }
 })
 
