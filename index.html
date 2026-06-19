@@ -232,6 +232,46 @@
   .weather-msg strong { color: var(--accent); }
   .weather-temp { font-size: 1.1rem; font-weight: 600; color: var(--accent2); white-space: nowrap; }
 
+  /* ── Mood ── */
+  .mood-bar {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; backdrop-filter: blur(12px);
+  }
+  .mood-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.12em; margin-bottom: 10px; }
+  .mood-options { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mood-btn {
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 14px; cursor: pointer; font-family: inherit; font-size: 0.78rem;
+    color: var(--muted); transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+  }
+  .mood-btn:hover { border-color: var(--accent2); color: var(--text); }
+  .mood-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(0,255,170,0.07); }
+  .mood-saved { font-size: 0.62rem; color: var(--muted); margin-top: 8px; min-height: 1em; }
+
+  /* ── History ── */
+  .history-toggle {
+    background: none; border: none; color: var(--muted); font-family: inherit;
+    font-size: 0.65rem; cursor: pointer; letter-spacing: 0.1em; padding: 0;
+    display: flex; align-items: center; gap: 6px; margin-top: 32px;
+    transition: color 0.2s;
+  }
+  .history-toggle:hover { color: var(--accent2); }
+  .history-panel { margin-top: 14px; display: none; }
+  .history-panel.open { display: block; }
+  .history-row {
+    display: grid; grid-template-columns: 1fr auto auto auto;
+    gap: 12px; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.7rem;
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-date { color: var(--muted); }
+  .history-mood { font-size: 1rem; }
+  .history-pct { color: var(--accent); font-weight: 600; }
+  .history-bar-wrap { width: 80px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; }
+  .history-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
+  .history-empty { font-size: 0.65rem; color: var(--muted); padding: 12px 0; }
+
   body::after {
     content: ''; position: fixed; inset: 0;
     background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
@@ -301,6 +341,25 @@
     <div class="weather-temp" id="weatherTemp"></div>
   </div>
 
+  <div class="weather-bar" id="weatherBar">
+    <div class="weather-icon" id="weatherIcon">⏳</div>
+    <div class="weather-msg" id="weatherMsg">cargando pronóstico...</div>
+    <div class="weather-temp" id="weatherTemp"></div>
+  </div>
+
+  <!-- Mood check-in -->
+  <div class="mood-bar" id="moodBar">
+    <div class="mood-label">// ¿CÓMO TE SIENTES HOY?</div>
+    <div class="mood-options">
+      <button class="mood-btn" data-mood="😴" data-label="cansado">😴 cansado</button>
+      <button class="mood-btn" data-mood="😟" data-label="estresado">😟 estresado</button>
+      <button class="mood-btn" data-mood="😐" data-label="neutral">😐 neutral</button>
+      <button class="mood-btn" data-mood="🙂" data-label="bien">🙂 bien</button>
+      <button class="mood-btn" data-mood="⚡" data-label="con energía">⚡ con energía</button>
+    </div>
+    <div class="mood-saved" id="moodSaved"></div>
+  </div>
+
   <div class="tasks-header">
     <span>// tareas</span>
     <button class="btn-add" onclick="addTask()">+ nueva tarea</button>
@@ -312,6 +371,11 @@
     <span id="totalTimeInfo"></span>
     <button class="btn-reset" onclick="resetDay()">↺ reiniciar día</button>
   </div>
+
+  <button class="history-toggle" onclick="toggleHistory()">
+    <span id="historyArrow">▶</span> // historial
+  </button>
+  <div class="history-panel" id="historyPanel"></div>
 </div>
 
 <div class="saving-indicator" id="savingIndicator">guardando...</div>
@@ -380,6 +444,7 @@ async function showApp() {
   updateCountdown()
   setInterval(updateCountdown, 1000)
   fetchWeather()
+  loadMood()
 }
 
 async function fetchWeather() {
@@ -518,6 +583,13 @@ document.getElementById('taskList').addEventListener('click', async e => {
     t.done = !t.done
     render()
     await patchTask(id, { done: t.done })
+    // sync daily_log progress
+    const today = new Date().toISOString().slice(0, 10)
+    const { data: { user } } = await sb.auth.getUser()
+    await sb.from('daily_log').upsert(
+      { user_id: user.id, date: today, tasks_total: tasks.length, tasks_done: tasks.filter(t=>t.done).length },
+      { onConflict: 'user_id,date' }
+    )
   }
 
   if (del) {
@@ -580,6 +652,59 @@ window.resetDay = async function() {
   render()
   flashSaving()
   await Promise.all(tasks.map(t => sb.from('tasks').update({ done: false }).eq('id', t.id)))
+}
+
+// ── Mood ─────────────────────────────────────────────────────────────────────
+async function loadMood() {
+  const today = new Date().toISOString().slice(0, 10)
+  const { data } = await sb.from('daily_log').select('mood').eq('date', today).maybeSingle()
+  if (data?.mood) applyMoodUI(data.mood)
+}
+
+function applyMoodUI(mood) {
+  document.querySelectorAll('.mood-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.mood === mood)
+  })
+  const label = document.querySelector(`.mood-btn[data-mood="${mood}"]`)?.dataset.label || mood
+  document.getElementById('moodSaved').textContent = `✓ registrado: ${label}`
+}
+
+document.querySelectorAll('.mood-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const mood  = btn.dataset.mood
+    const today = new Date().toISOString().slice(0, 10)
+    const { data: { user } } = await sb.auth.getUser()
+    await sb.from('daily_log').upsert(
+      { user_id: user.id, date: today, mood, tasks_total: tasks.length, tasks_done: tasks.filter(t=>t.done).length },
+      { onConflict: 'user_id,date' }
+    )
+    applyMoodUI(mood)
+  })
+})
+
+// ── History ───────────────────────────────────────────────────────────────────
+window.toggleHistory = async function() {
+  const panel = document.getElementById('historyPanel')
+  const arrow = document.getElementById('historyArrow')
+  const isOpen = panel.classList.toggle('open')
+  arrow.textContent = isOpen ? '▼' : '▶'
+  if (!isOpen) return
+  const { data } = await sb.from('daily_log').select('*').order('date', { ascending: false }).limit(30)
+  if (!data || data.length === 0) {
+    panel.innerHTML = '<div class="history-empty">aún no hay registros</div>'
+    return
+  }
+  panel.innerHTML = data.map(row => {
+    const pct  = row.tasks_total ? Math.round(row.tasks_done / row.tasks_total * 100) : 0
+    const date = new Date(row.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })
+    return `
+      <div class="history-row">
+        <span class="history-date">${date}</span>
+        <span class="history-mood">${row.mood}</span>
+        <span class="history-pct">${pct}%</span>
+        <div class="history-bar-wrap"><div class="history-bar-fill" style="width:${pct}%"></div></div>
+      </div>`
+  }).join('')
 }
 
 // ── Countdown ────────────────────────────────────────────────────────────────
