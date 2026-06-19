@@ -562,6 +562,14 @@ const SUPABASE_URL = 'https://ysoaipscjkuritviyopf.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_DjojLjFLN5y7F2NytE0JQA_RUIs-Xrf'
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
+function getLocalDateString() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const r = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${r}`
+}
+
 const DEFAULT_TASKS = [
   { name: 'Quehacer del hogar', duration: 30, done: false, position: 0 },
   { name: 'Ejercicio',          duration: 40, done: false, position: 1 },
@@ -892,7 +900,7 @@ window.resetDay = async function() {
 // ── Mood ──────────────────────────────────────────────────────────────────────
 
 async function logDay(fields) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = getLocalDateString()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return
   const { data: existing } = await sb.from('daily_log').select('id').eq('user_id', user.id).eq('date', today).maybeSingle()
@@ -904,7 +912,7 @@ async function logDay(fields) {
 }
 
 async function loadMood() {
-  const today  = new Date().toISOString().slice(0, 10)
+  const today  = getLocalDateString()
   const { data } = await sb.from('daily_log').select('mood').eq('date', today).maybeSingle()
   if (data?.mood) applyMoodUI(data.mood)
 }
@@ -985,7 +993,10 @@ window.toggleMetrics = async function() {
 
   const last30  = Array.from({ length: 30 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (29 - i))
-    return d.toISOString().slice(0, 10)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const r = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${r}`
   })
   const byDate = Object.fromEntries(data.map(r => [r.date, r]))
 
