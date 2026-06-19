@@ -81,6 +81,22 @@
   .auth-msg { font-size: 0.65rem; color: var(--accent2); text-align: center; min-height: 1em; }
   .auth-msg.err { color: var(--danger); }
 
+  .auth-sent {
+    display: none; flex-direction: column; align-items: center; gap: 14px;
+    text-align: center;
+  }
+  .auth-sent.visible { display: flex; }
+  .auth-sent .sent-icon { font-size: 2rem; }
+  .auth-sent .sent-title { font-size: 0.85rem; color: var(--accent); }
+  .auth-sent .sent-sub { font-size: 0.65rem; color: var(--muted); line-height: 1.6; }
+  .auth-sent .sent-email { color: var(--accent2); }
+  .btn-resend {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    font-family: inherit; font-size: 0.62rem; padding: 6px 14px; border-radius: 6px;
+    cursor: pointer; letter-spacing: 0.08em; transition: all 0.2s; margin-top: 4px;
+  }
+  .btn-resend:hover { border-color: var(--accent2); color: var(--accent2); }
+
   /* ── App ── */
   .app {
     position: relative; z-index: 1;
@@ -225,10 +241,22 @@
 <div id="authScreen">
   <h1>// morning_routine</h1>
   <div class="auth-box">
-    <label>ACCESO VÍA MAGIC LINK</label>
-    <input type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email">
-    <button class="btn-primary" id="btnSendLink">enviar link →</button>
-    <div class="auth-msg" id="authMsg"></div>
+    <div id="authForm" style="display:flex;flex-direction:column;gap:14px">
+      <label>ACCESO VÍA MAGIC LINK</label>
+      <input type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" style="margin-top:14px">
+      <button class="btn-primary" id="btnSendLink" style="margin-top:4px">enviar link →</button>
+      <div class="auth-msg" id="authMsg"></div>
+    </div>
+    <div class="auth-sent" id="authSent">
+      <div class="sent-icon">📨</div>
+      <div class="sent-title">link enviado</div>
+      <div class="sent-sub">
+        Revisa el inbox de<br>
+        <span class="sent-email" id="sentEmailLabel"></span><br><br>
+        Haz click en el link del correo<br>para iniciar sesión.
+      </div>
+      <button class="btn-resend" id="btnResend">← usar otro email</button>
+    </div>
   </div>
 </div>
 
@@ -320,9 +348,23 @@ document.getElementById('btnSendLink').addEventListener('click', async () => {
     btn.disabled = false
     btn.textContent = 'enviar link →'
   } else {
-    msg.textContent = '✓ revisa tu email — el link expira en 1 hora'
-    msg.className = 'auth-msg'
+    document.getElementById('authForm').style.display = 'none'
+    document.getElementById('sentEmailLabel').textContent = email
+    document.getElementById('authSent').classList.add('visible')
   }
+})
+
+document.getElementById('btnResend').addEventListener('click', () => {
+  document.getElementById('authSent').classList.remove('visible')
+  document.getElementById('authForm').style.display = 'flex'
+  document.getElementById('authForm').style.flexDirection = 'column'
+  document.getElementById('authForm').style.gap = '14px'
+  const btn = document.getElementById('btnSendLink')
+  btn.disabled = false
+  btn.textContent = 'enviar link →'
+  document.getElementById('authMsg').textContent = ''
+  document.getElementById('emailInput').value = ''
+  document.getElementById('emailInput').focus()
 })
 
 document.getElementById('btnSignOut').addEventListener('click', async () => {
