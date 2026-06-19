@@ -273,6 +273,47 @@
   .history-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
   .history-empty { font-size: 0.65rem; color: var(--muted); padding: 12px 0; }
 
+  /* ── Metrics ── */
+  .metrics-toggle {
+    background: none; border: none; color: var(--muted); font-family: inherit;
+    font-size: 0.65rem; cursor: pointer; letter-spacing: 0.1em; padding: 0;
+    display: flex; align-items: center; gap: 6px; margin-top: 14px;
+    transition: color 0.2s;
+  }
+  .metrics-toggle:hover { color: var(--accent2); }
+  .metrics-panel { margin-top: 14px; display: none; }
+  .metrics-panel.open { display: block; }
+
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .metric-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; backdrop-filter: blur(12px);
+  }
+  .metric-card .mc-label { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 6px; }
+  .metric-card .mc-value { font-size: 1.6rem; font-weight: 700; color: var(--accent); line-height: 1; }
+  .metric-card .mc-sub   { font-size: 0.62rem; color: var(--muted); margin-top: 4px; }
+
+  .mood-chart-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 10px; }
+  .mood-chart { display: flex; align-items: flex-end; gap: 4px; height: 60px; }
+  .mood-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .mood-col-bar {
+    width: 100%; border-radius: 3px 3px 0 0;
+    background: linear-gradient(180deg, var(--accent2), var(--accent));
+    transition: height 0.4s ease; min-height: 2px;
+  }
+  .mood-col-emoji { font-size: 0.7rem; }
+  .mood-col-count { font-size: 0.55rem; color: var(--muted); }
+
+  .streak-row { display: flex; gap: 5px; margin-top: 16px; flex-wrap: wrap; }
+  .streak-dot {
+    width: 22px; height: 22px; border-radius: 4px; font-size: 0.7rem;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border);
+  }
+  .streak-dot.completed { background: rgba(0,255,170,0.15); border-color: var(--accent); }
+  .streak-dot.missed    { background: rgba(255,68,102,0.08); border-color: rgba(255,68,102,0.2); }
+  .streak-dot.empty     { opacity: 0.2; }
+
   body::after {
     content: ''; position: fixed; inset: 0;
     background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
@@ -378,6 +419,11 @@
     <span id="historyArrow">▶</span> // historial
   </button>
   <div class="history-panel" id="historyPanel"></div>
+
+  <button class="metrics-toggle" onclick="toggleMetrics()">
+    <span id="metricsArrow">▶</span> // métricas emocionales
+  </button>
+  <div class="metrics-panel" id="metricsPanel"></div>
 </div>
 
 <div class="saving-indicator" id="savingIndicator">guardando...</div>
@@ -713,6 +759,92 @@ window.toggleHistory = async function() {
         <div class="history-bar-wrap"><div class="history-bar-fill" style="width:${pct}%"></div></div>
       </div>`
   }).join('')
+}
+
+window.toggleMetrics = async function() {
+  const panel = document.getElementById('metricsPanel')
+  const arrow = document.getElementById('metricsArrow')
+  const isOpen = panel.classList.toggle('open')
+  arrow.textContent = isOpen ? '▼' : '▶'
+  if (!isOpen) return
+
+  const { data } = await sb.from('daily_log').select('*').order('date', { ascending: false }).limit(60)
+  if (!data || data.length === 0) {
+    panel.innerHTML = '<div class="history-empty">aún no hay registros suficientes</div>'
+    return
+  }
+
+  // ── Summary cards ──
+  const total    = data.length
+  const avgPct   = Math.round(data.reduce((s, r) => s + (r.tasks_total ? r.tasks_done / r.tasks_total * 100 : 0), 0) / total)
+  const perfect  = data.filter(r => r.tasks_total && r.tasks_done === r.tasks_total).length
+  const moodCount = {}
+  data.forEach(r => { if (r.mood) moodCount[r.mood] = (moodCount[r.mood] || 0) + 1 })
+  const topMood  = Object.entries(moodCount).sort((a,b) => b[1]-a[1])[0]
+
+  // streak (consecutive days with at least 1 task done)
+  let streak = 0
+  const sorted = [...data].sort((a,b) => b.date.localeCompare(a.date))
+  for (const r of sorted) {
+    if (r.tasks_done > 0) streak++; else break
+  }
+
+  // ── Last 30 days dot grid ──
+  const last30 = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (29 - i))
+    return d.toISOString().slice(0, 10)
+  })
+  const byDate = Object.fromEntries(data.map(r => [r.date, r]))
+
+  panel.innerHTML = `
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="mc-label">PROMEDIO DE COMPLETADO</div>
+        <div class="mc-value">${avgPct}%</div>
+        <div class="mc-sub">últimos ${total} días registrados</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">DÍAS PERFECTOS</div>
+        <div class="mc-value">${perfect}</div>
+        <div class="mc-sub">100% tareas completadas</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">RACHA ACTUAL</div>
+        <div class="mc-value">${streak} 🔥</div>
+        <div class="mc-sub">días consecutivos activo</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">ESTADO MÁS FRECUENTE</div>
+        <div class="mc-value">${topMood ? topMood[0] : '—'}</div>
+        <div class="mc-sub">${topMood ? `${topMood[1]} de ${total} días` : 'sin datos'}</div>
+      </div>
+    </div>
+
+    <div class="mood-chart-label">// DISTRIBUCIÓN EMOCIONAL</div>
+    <div class="mood-chart">
+      ${['😴','😟','😢','😐','🙂','⚡'].map(e => {
+        const count = moodCount[e] || 0
+        const maxC  = Math.max(...Object.values(moodCount), 1)
+        const h     = Math.round(count / maxC * 52)
+        return `<div class="mood-col">
+          <div class="mood-col-bar" style="height:${h}px"></div>
+          <div class="mood-col-emoji">${e}</div>
+          <div class="mood-col-count">${count}</div>
+        </div>`
+      }).join('')}
+    </div>
+
+    <div class="mood-chart-label" style="margin-top:20px">// ÚLTIMOS 30 DÍAS</div>
+    <div class="streak-row">
+      ${last30.map(date => {
+        const r = byDate[date]
+        if (!r) return `<div class="streak-dot empty" title="${date}">·</div>`
+        const pct = r.tasks_total ? r.tasks_done / r.tasks_total : 0
+        const cls = pct === 1 ? 'completed' : 'missed'
+        return `<div class="streak-dot ${cls}" title="${date} ${r.mood||''}">${r.mood || '·'}</div>`
+      }).join('')}
+    </div>
+  `
 }
 
 // ── Countdown ────────────────────────────────────────────────────────────────
