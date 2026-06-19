@@ -1,0 +1,19 @@
+/* ── mood.css — check-in de estado de ánimo ── */
+
+.mood-bar {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 18px; margin-bottom: 28px; backdrop-filter: blur(12px);
+}
+.mood-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.12em; margin-bottom: 10px; }
+
+.mood-options { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.mood-btn {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 14px; cursor: pointer; font-family: inherit; font-size: 0.78rem;
+  color: var(--muted); transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+}
+.mood-btn:hover    { border-color: var(--accent2); color: var(--text); }
+.mood-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(0,255,170,0.07); }
+
+.mood-saved { font-size: 0.62rem; color: var(--muted); margin-top: 8px; min-height: 1em; }

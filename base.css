@@ -1,0 +1,63 @@
+/* ── base.css — variables, reset, tipografía ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #060a0f;
+  --surface: rgba(10, 18, 28, 0.75);
+  --border:  rgba(0, 255, 170, 0.18);
+  --accent:  #00ffaa;
+  --accent2: #00aaff;
+  --warn:    #ffaa00;
+  --danger:  #ff4466;
+  --text:    #c8d8e8;
+  --muted:   #4a6070;
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* scanlines overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* shared buttons */
+.btn-add {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.65rem;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn-add:hover { background: rgba(0,255,170,0.07); border-color: var(--accent); }
+
+.saving-indicator {
+  font-size: 0.6rem;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.3s;
+  position: fixed;
+  bottom: 16px; right: 20px;
+  z-index: 10;
+}
+.saving-indicator.visible { opacity: 1; }

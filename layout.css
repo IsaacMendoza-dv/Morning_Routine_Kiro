@@ -1,0 +1,115 @@
+/* ── layout.css — auth screen, app shell, header, progress ── */
+
+/* Auth */
+#authScreen {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; gap: 24px; padding: 20px;
+}
+#authScreen h1 { font-size: 1rem; color: var(--muted); letter-spacing: 0.15em; }
+
+.auth-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  backdrop-filter: blur(12px);
+  display: flex; flex-direction: column; gap: 14px;
+  width: 100%; max-width: 360px;
+}
+.auth-box label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
+.auth-box input[type="email"] {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit; font-size: 0.85rem;
+  padding: 10px 14px; border-radius: 7px; outline: none; width: 100%;
+  transition: border-color 0.2s;
+}
+.auth-box input[type="email"]:focus { border-color: var(--accent2); }
+
+.btn-primary {
+  background: rgba(0,255,170,0.1);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: inherit; font-size: 0.72rem;
+  padding: 10px; border-radius: 7px; cursor: pointer;
+  letter-spacing: 0.1em; transition: background 0.2s;
+}
+.btn-primary:hover    { background: rgba(0,255,170,0.18); }
+.btn-primary:disabled { opacity: 0.4; cursor: default; }
+
+.auth-msg { font-size: 0.65rem; color: var(--danger); text-align: center; min-height: 1em; }
+
+.btn-google {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--text);
+  font-family: inherit; font-size: 0.8rem;
+  padding: 12px; border-radius: 8px; cursor: pointer;
+  letter-spacing: 0.04em; transition: background 0.2s, border-color 0.2s; width: 100%;
+}
+.btn-google:hover    { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+.btn-google:disabled { opacity: 0.4; cursor: default; }
+
+/* App shell */
+.app {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 780px;
+  padding: 32px 20px 60px;
+  display: none;
+}
+
+/* Header */
+header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 36px; flex-wrap: wrap; gap: 16px;
+}
+.header-left h1 { font-size: 1.1rem; font-weight: 400; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
+.header-left .date { font-size: 0.72rem; color: var(--muted); margin-top: 4px; opacity: 0.6; }
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+.countdown-block { text-align: right; }
+.countdown-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; }
+.countdown-time  { font-size: 2.8rem; font-weight: 700; letter-spacing: 0.04em; line-height: 1; transition: color 0.4s; }
+.countdown-time.on-time { color: var(--accent);  text-shadow: 0 0 20px rgba(0,255,170,0.4); }
+.countdown-time.warning  { color: var(--warn);   text-shadow: 0 0 20px rgba(255,170,0,0.4); }
+.countdown-time.late     { color: var(--danger); text-shadow: 0 0 20px rgba(255,68,102,0.4); }
+
+.start-config { font-size: 0.62rem; color: var(--muted); display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.start-config input[type="time"] {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--accent2); font-family: inherit; font-size: 0.62rem;
+  padding: 2px 6px; border-radius: 4px; outline: none; cursor: pointer;
+}
+.start-config input[type="time"]:focus { border-color: var(--accent2); }
+
+.btn-signout {
+  background: none; border: 1px solid rgba(255,255,255,0.08);
+  color: var(--muted); font-family: inherit; font-size: 0.58rem;
+  padding: 3px 9px; border-radius: 5px; cursor: pointer;
+  letter-spacing: 0.08em; transition: all 0.2s;
+}
+.btn-signout:hover { border-color: var(--danger); color: var(--danger); }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 28px; }
+.progress-meta { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.08em; }
+.progress-bar-bg   { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.5s ease; box-shadow: 0 0 8px rgba(0,255,170,0.5); }
+
+/* Footer */
+.footer-info { margin-top: 32px; display: flex; justify-content: space-between; align-items: center; font-size: 0.62rem; color: var(--muted); letter-spacing: 0.08em; flex-wrap: wrap; gap: 8px; }
+.btn-reset {
+  background: none; border: 1px solid rgba(255,68,102,0.25); color: rgba(255,68,102,0.5);
+  font-family: inherit; font-size: 0.6rem; padding: 4px 10px; border-radius: 5px;
+  cursor: pointer; letter-spacing: 0.1em; transition: all 0.2s;
+}
+.btn-reset:hover { border-color: var(--danger); color: var(--danger); }
+
+/* Responsive */
+@media (max-width: 500px) {
+  .countdown-time { font-size: 2rem; }
+}

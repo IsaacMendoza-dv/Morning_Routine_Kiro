@@ -1,0 +1,53 @@
+/* ── history.css — historial y métricas emocionales ── */
+
+.history-toggle, .metrics-toggle {
+  background: none; border: none; color: var(--muted); font-family: inherit;
+  font-size: 0.65rem; cursor: pointer; letter-spacing: 0.1em; padding: 0;
+  display: flex; align-items: center; gap: 6px; margin-top: 14px; transition: color 0.2s;
+}
+.history-toggle { margin-top: 32px; }
+.history-toggle:hover, .metrics-toggle:hover { color: var(--accent2); }
+
+.history-panel, .metrics-panel { margin-top: 14px; display: none; }
+.history-panel.open, .metrics-panel.open { display: block; }
+
+.history-row {
+  display: grid; grid-template-columns: 1fr auto auto auto;
+  gap: 12px; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.7rem;
+}
+.history-row:last-child { border-bottom: none; }
+.history-date  { color: var(--muted); }
+.history-mood  { font-size: 1rem; }
+.history-pct   { color: var(--accent); font-weight: 600; }
+.history-bar-wrap { width: 80px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; }
+.history-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
+.history-empty { font-size: 0.65rem; color: var(--muted); padding: 12px 0; }
+
+/* Metrics */
+.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+
+.metric-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; backdrop-filter: blur(12px);
+}
+.metric-card .mc-label { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 6px; }
+.metric-card .mc-value { font-size: 1.6rem; font-weight: 700; color: var(--accent); line-height: 1; }
+.metric-card .mc-sub   { font-size: 0.62rem; color: var(--muted); margin-top: 4px; }
+
+.mood-chart-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 10px; }
+.mood-chart { display: flex; align-items: flex-end; gap: 4px; height: 60px; }
+
+.mood-col       { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.mood-col-bar   { width: 100%; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, var(--accent2), var(--accent)); transition: height 0.4s ease; min-height: 2px; }
+.mood-col-emoji { font-size: 0.7rem; }
+.mood-col-count { font-size: 0.55rem; color: var(--muted); }
+
+.streak-row { display: flex; gap: 5px; margin-top: 16px; flex-wrap: wrap; }
+.streak-dot {
+  width: 22px; height: 22px; border-radius: 4px; font-size: 0.7rem;
+  display: flex; align-items: center; justify-content: center; border: 1px solid var(--border);
+}
+.streak-dot.completed { background: rgba(0,255,170,0.15); border-color: var(--accent); }
+.streak-dot.missed    { background: rgba(255,68,102,0.08); border-color: rgba(255,68,102,0.2); }
+.streak-dot.empty     { opacity: 0.2; }
