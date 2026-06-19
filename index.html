@@ -216,6 +216,22 @@
   }
   .saving-indicator.visible { opacity: 1; }
 
+  /* ── Weather ── */
+  .weather-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 28px;
+    backdrop-filter: blur(12px);
+    font-size: 0.75rem;
+  }
+  .weather-icon { font-size: 1.6rem; line-height: 1; }
+  .weather-msg  { color: var(--text); flex: 1; }
+  .weather-msg strong { color: var(--accent); }
+  .weather-temp { font-size: 1.1rem; font-weight: 600; color: var(--accent2); white-space: nowrap; }
+
   body::after {
     content: ''; position: fixed; inset: 0;
     background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
@@ -277,6 +293,12 @@
     <div class="progress-bar-bg">
       <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
     </div>
+  </div>
+
+  <div class="weather-bar" id="weatherBar">
+    <div class="weather-icon" id="weatherIcon">⏳</div>
+    <div class="weather-msg" id="weatherMsg">cargando pronóstico...</div>
+    <div class="weather-temp" id="weatherTemp"></div>
   </div>
 
   <div class="tasks-header">
@@ -357,6 +379,36 @@ async function showApp() {
   render()
   updateCountdown()
   setInterval(updateCountdown, 1000)
+  fetchWeather()
+}
+
+async function fetchWeather() {
+  try {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=19.4326&longitude=-99.1332&current=temperature_2m,precipitation_probability,weathercode&timezone=America%2FMexico_City')
+    const d = await res.json()
+    const temp  = Math.round(d.current.temperature_2m)
+    const rain  = d.current.precipitation_probability
+    const code  = d.current.weathercode
+
+    let icon, msg
+    if (rain >= 60 || [61,63,65,80,81,82].includes(code)) {
+      icon = '🌧️'; msg = `<strong>Lleva paraguas</strong> — se pronostican lluvias (${rain}% prob.)`
+    } else if (rain >= 30 || [51,53,55].includes(code)) {
+      icon = '🌦️'; msg = `<strong>Puede llover</strong> — lleva paraguas por si acaso (${rain}% prob.)`
+    } else if (temp >= 28) {
+      icon = '☀️'; msg = `<strong>Llevate los lentes de sol</strong> — hará calor hoy`
+    } else if ([1,2,3,45,48].includes(code)) {
+      icon = '☁️'; msg = `Cielo nublado hoy, sin lluvia esperada`
+    } else {
+      icon = '🌤️'; msg = `Buen día para salir — sin lluvia esperada`
+    }
+
+    document.getElementById('weatherIcon').textContent = icon
+    document.getElementById('weatherMsg').innerHTML = msg
+    document.getElementById('weatherTemp').textContent = `${temp}°C`
+  } catch {
+    document.getElementById('weatherMsg').textContent = 'pronóstico no disponible'
+  }
 }
 
 function showAuth() {
