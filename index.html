@@ -683,8 +683,11 @@ async function deleteTask(id) {
 
 async function insertTask(task) {
   flashSaving()
-  const { data: { user } } = await sb.auth.getUser()
-  const { data } = await sb.from('tasks').insert({ ...task, user_id: user.id }).select().single()
+  const { data: { user }, error: userError } = await sb.auth.getUser()
+  console.log('insertTask user:', user, userError)
+  if (!user) return null
+  const { data, error } = await sb.from('tasks').insert({ ...task, user_id: user.id }).select().single()
+  if (error) console.error('insert error:', error)
   return data
 }
 
