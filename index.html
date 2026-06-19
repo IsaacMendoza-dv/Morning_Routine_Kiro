@@ -205,6 +205,14 @@ header {
   backdrop-filter: blur(12px);
   font-size: 0.75rem;
 }
+@media (min-width: 768px) {
+  .weather-bar {
+    margin-top: 42px;
+    margin-bottom: 0;
+    max-width: 220px;
+    flex: 1;
+  }
+}
 .weather-icon { font-size: 1.6rem; line-height: 1; }
 .weather-msg { color: var(--text); flex: 1; }
 .weather-msg strong { color: var(--accent); }
@@ -472,6 +480,13 @@ body::after {
         <div id="calendarEvents"><span class="cal-empty">cargando...</span></div>
       </div>
     </div>
+    
+    <div class="weather-bar" id="weatherBar">
+      <div class="weather-icon" id="weatherIcon">⏳</div>
+      <div class="weather-msg" id="weatherMsg">cargando pronóstico...</div>
+      <div class="weather-temp" id="weatherTemp"></div>
+    </div>
+
     <div class="header-right">
       <div class="countdown-block">
         <div class="countdown-label">tiempo para iniciar → 06:00</div>
@@ -493,12 +508,6 @@ body::after {
     <div class="progress-bar-bg">
       <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
     </div>
-  </div>
-
-  <div class="weather-bar" id="weatherBar">
-    <div class="weather-icon" id="weatherIcon">⏳</div>
-    <div class="weather-msg" id="weatherMsg">cargando pronóstico...</div>
-    <div class="weather-temp" id="weatherTemp"></div>
   </div>
 
   <!-- Pending Items — NUEVA SECCIÓN -->
