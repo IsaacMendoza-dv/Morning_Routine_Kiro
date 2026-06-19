@@ -792,7 +792,7 @@ document.getElementById('taskList').addEventListener('click', async e => {
 
   if (check) {
     const id = check.dataset.id
-    const t  = tasks.find(t => t.id === id)
+    const t  = tasks.find(t => String(t.id) === String(id))
     if (!t) return
     t.done = !t.done
     render()
@@ -802,7 +802,7 @@ document.getElementById('taskList').addEventListener('click', async e => {
 
   if (del) {
     const id = del.dataset.id
-    tasks = tasks.filter(t => t.id !== id)
+    tasks = tasks.filter(t => String(t.id) !== String(id))
     render()
     await deleteTask(id)
   }
@@ -816,7 +816,7 @@ document.getElementById('taskList').addEventListener('input', async e => {
 
   if (nameEl) {
     const id = nameEl.dataset.id
-    const t  = tasks.find(t => t.id === id)
+    const t  = tasks.find(t => String(t.id) === String(id))
     if (!t) return
     t.name = nameEl.textContent.trim()
     updateProgress()
@@ -826,7 +826,7 @@ document.getElementById('taskList').addEventListener('input', async e => {
 
   if (durEl) {
     const id = durEl.dataset.id
-    const t  = tasks.find(t => t.id === id)
+    const t  = tasks.find(t => String(t.id) === String(id))
     if (!t) return
     t.duration = Number(durEl.value)
     render()
@@ -1097,7 +1097,7 @@ document.getElementById('pendingList').addEventListener('click', async e => {
 
   if (check) {
     const id   = check.dataset.pid
-    const item = pendingItems.find(p => p.id === id)
+    const item = pendingItems.find(p => String(p.id) === String(id))
     if (!item) return
     item.done = !item.done
     renderPending()
@@ -1107,7 +1107,7 @@ document.getElementById('pendingList').addEventListener('click', async e => {
 
   if (del) {
     const id = del.dataset.pid
-    pendingItems = pendingItems.filter(p => p.id !== id)
+    pendingItems = pendingItems.filter(p => String(p.id) !== String(id))
     renderPending()
     flashSaving()
     await sb.from('pending_items').delete().eq('id', id)
@@ -1120,7 +1120,7 @@ document.getElementById('pendingList').addEventListener('input', async e => {
 
   if (titleEl) {
     const id   = titleEl.dataset.pid
-    const item = pendingItems.find(p => p.id === id)
+    const item = pendingItems.find(p => String(p.id) === String(id))
     if (!item) return
     item.title = titleEl.textContent.trim()
     clearTimeout(pendingDebounce['t_' + id])
@@ -1132,7 +1132,7 @@ document.getElementById('pendingList').addEventListener('input', async e => {
 
   if (dateEl) {
     const id   = dateEl.dataset.pid
-    const item = pendingItems.find(p => p.id === id)
+    const item = pendingItems.find(p => String(p.id) === String(id))
     if (!item) return
     item.due_date = dateEl.value
     renderPending()
@@ -1161,7 +1161,7 @@ window.addPending = async function() {
 
   setTimeout(() => {
     const titles = document.querySelectorAll('.pending-title')
-    const match  = [...titles].find(el => el.dataset.pid === data.id)
+    const match  = [...titles].find(el => String(el.dataset.pid) === String(data.id))
     if (match) {
       match.focus()
       document.execCommand('selectAll', false, null)
@@ -1170,7 +1170,7 @@ window.addPending = async function() {
         match.removeEventListener('blur', onBlur)
         const newTitle = match.textContent.trim()
         if (newTitle && newTitle !== 'Nuevo pendiente') {
-          const item = pendingItems.find(p => p.id === data.id)
+          const item = pendingItems.find(p => String(p.id) === String(data.id))
           if (item) item.title = newTitle
           flashSaving()
           await sb.from('pending_items').update({ title: newTitle }).eq('id', data.id)
