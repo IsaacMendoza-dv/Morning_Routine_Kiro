@@ -294,12 +294,13 @@
 
 <div class="saving-indicator" id="savingIndicator">guardando...</div>
 
-<script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(async function() {
 
 const SUPABASE_URL = 'https://ysoaipscjkuritviyopf.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_DjojLjFLN5y7F2NytE0JQA_RUIs-Xrf'
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const DEFAULT_TASKS = [
   { name: 'Quehacer del hogar', duration: 30, done: false, position: 0 },
@@ -572,6 +573,7 @@ function updateCountdown() {
   window.addEventListener('resize', resize)
   resize(); init(); draw()
 })()
+})();
 </script>
 </body>
 </html>
