@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Morning Routine</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌅</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -353,6 +354,7 @@
     <div class="mood-options">
       <button class="mood-btn" data-mood="😴" data-label="cansado">😴 cansado</button>
       <button class="mood-btn" data-mood="😟" data-label="estresado">😟 estresado</button>
+      <button class="mood-btn" data-mood="😢" data-label="triste">😢 triste</button>
       <button class="mood-btn" data-mood="😐" data-label="neutral">😐 neutral</button>
       <button class="mood-btn" data-mood="🙂" data-label="bien">🙂 bien</button>
       <button class="mood-btn" data-mood="⚡" data-label="con energía">⚡ con energía</button>
@@ -661,16 +663,22 @@ async function loadMood() {
   if (data?.mood) applyMoodUI(data.mood)
 }
 
-function applyMoodUI(mood) {
+function applyMoodUI(mood, locked = true) {
   document.querySelectorAll('.mood-btn').forEach(b => {
     b.classList.toggle('selected', b.dataset.mood === mood)
+    if (locked) b.disabled = true
   })
   const label = document.querySelector(`.mood-btn[data-mood="${mood}"]`)?.dataset.label || mood
-  document.getElementById('moodSaved').textContent = `✓ registrado: ${label}`
+  document.getElementById('moodSaved').textContent = locked
+    ? `✓ registrado: ${label} — solo se puede registrar una vez al día`
+    : `✓ registrado: ${label}`
 }
 
 document.querySelectorAll('.mood-btn').forEach(btn => {
   btn.addEventListener('click', async () => {
+    // prevent double-click race
+    if (btn.disabled) return
+    document.querySelectorAll('.mood-btn').forEach(b => b.disabled = true)
     const mood  = btn.dataset.mood
     const today = new Date().toISOString().slice(0, 10)
     const { data: { user } } = await sb.auth.getUser()
@@ -678,7 +686,7 @@ document.querySelectorAll('.mood-btn').forEach(btn => {
       { user_id: user.id, date: today, mood, tasks_total: tasks.length, tasks_done: tasks.filter(t=>t.done).length },
       { onConflict: 'user_id,date' }
     )
-    applyMoodUI(mood)
+    applyMoodUI(mood, true)
   })
 })
 
