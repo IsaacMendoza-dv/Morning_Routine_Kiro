@@ -511,7 +511,7 @@ body::after {
       <div style="font-size:0.65rem;color:var(--muted);padding:8px 0">cargando...</div>
     </div>
     <button class="pending-history-toggle" id="pendingHistoryToggle" onclick="togglePendingHistory()">
-      <span id="pendingHistoryArrow">▶</span> // historial de pendientes realizados
+      <span id="pendingHistoryArrow">▶</span> // historico de pendiente
     </button>
     <div class="pending-history-panel" id="pendingHistoryPanel"></div>
   </div>
@@ -1064,7 +1064,7 @@ function getDaysLeft(dueDateStr) {
 
 function urgencyClass(days, done) {
   if (done)      return ''
-  if (days <= 3) return 'urgency-high'
+  if (days <= 5) return 'urgency-high'
   if (days <= 7) return 'urgency-mid'
   return 'urgency-low'
 }
@@ -1096,8 +1096,28 @@ async function loadPending() {
 }
 
 function renderPending() {
-  const active = pendingItems.filter(p => !p.done).sort((a, b) => a.due_date.localeCompare(b.due_date))
-  const completed = pendingItems.filter(p => p.done).sort((a, b) => {
+  const todayStr = getLocalDateString()
+  
+  // Activos: No completados, o completados HOY (para que los vea tachados hoy)
+  const active = pendingItems.filter(p => {
+    if (!p.done) return true
+    if (p.completed_at) {
+      return p.completed_at.slice(0, 10) === todayStr
+    }
+    return false
+  }).sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1
+    return a.due_date.localeCompare(b.due_date)
+  })
+
+  // Histórico: Completados en días anteriores al de hoy (o sin fecha de completado pero ya marcados)
+  const completed = pendingItems.filter(p => {
+    if (!p.done) return false
+    if (p.completed_at) {
+      return p.completed_at.slice(0, 10) !== todayStr
+    }
+    return true
+  }).sort((a, b) => {
     const da = a.completed_at || ''
     const db = b.completed_at || ''
     return db.localeCompare(da)
@@ -1114,9 +1134,9 @@ function renderPending() {
       const urg  = urgencyClass(days, item.done)
 
       const card = document.createElement('div')
-      card.className = `pending-card ${urg}`
+      card.className = `pending-card ${urg} ${item.done ? 'done' : ''}`
       card.innerHTML = `
-        <div class="pending-check" data-pid="${item.id}"></div>
+        <div class="pending-check ${item.done ? 'checked' : ''}" data-pid="${item.id}"></div>
         <div class="pending-body">
           <div class="pending-title" contenteditable="true" spellcheck="false" data-pid="${item.id}">${item.title}</div>
           <div class="pending-due">
