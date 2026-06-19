@@ -248,6 +248,9 @@
   .cal-busy { color: var(--muted); font-style: italic; }
   .cal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
   .cal-empty { font-size: 0.68rem; color: var(--muted); }
+  #calendarEvents { max-height: 110px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  #calendarEvents::-webkit-scrollbar { width: 3px; }
+  #calendarEvents::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
   /* ── Mood ── */
   .mood-bar {
