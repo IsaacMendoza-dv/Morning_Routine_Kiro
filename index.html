@@ -403,12 +403,6 @@
     <div class="weather-temp" id="weatherTemp"></div>
   </div>
 
-  <div class="weather-bar" id="weatherBar">
-    <div class="weather-icon" id="weatherIcon">⏳</div>
-    <div class="weather-msg" id="weatherMsg">cargando pronóstico...</div>
-    <div class="weather-temp" id="weatherTemp"></div>
-  </div>
-
   <!-- Mood check-in -->
   <div class="mood-bar" id="moodBar">
     <div class="mood-label">// ¿CÓMO TE SIENTES HOY?</div>
@@ -521,17 +515,30 @@ async function showApp() {
 
 async function fetchCalendar() {
   try {
-    const { data: { session } } = await sb.auth.getSession()
-    const token = session?.provider_token
-    if (!token) { document.getElementById('calendarEvents').innerHTML = '<span class="cal-empty">reconecta con Google para ver tu agenda</span>'; return }
+    // grab provider_token from URL hash on first redirect, then persist it
+    const hash = Object.fromEntries(new URLSearchParams(window.location.hash.slice(1)))
+    if (hash.provider_token) {
+      localStorage.setItem('mr_gtoken', hash.provider_token)
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+    const token = localStorage.getItem('mr_gtoken')
+    if (!token) {
+      document.getElementById('calendarEvents').innerHTML = '<span class="cal-empty">reconecta con Google para ver tu agenda</span>'
+      return
+    }
 
-    const now      = new Date()
-    const start    = new Date(now); start.setHours(0,0,0,0)
-    const end      = new Date(now); end.setHours(23,59,59,999)
-    const calId    = encodeURIComponent('cim.ramirez@etribe.mx')
-    const url      = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?timeMin=${start.toISOString()}&timeMax=${end.toISOString()}&singleEvents=true&orderBy=startTime&fields=items(start,end)`
+    const now   = new Date()
+    const start = new Date(now); start.setHours(0,0,0,0)
+    const end   = new Date(now); end.setHours(23,59,59,999)
+    const calId = encodeURIComponent('cim.ramirez@etribe.mx')
+    const url   = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?timeMin=${start.toISOString()}&timeMax=${end.toISOString()}&singleEvents=true&orderBy=startTime&fields=items(start,end)`
 
     const res  = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    if (res.status === 401) {
+      localStorage.removeItem('mr_gtoken')
+      document.getElementById('calendarEvents').innerHTML = '<span class="cal-empty">sesión expirada — reconecta con Google</span>'
+      return
+    }
     const data = await res.json()
 
     const el = document.getElementById('calendarEvents')
