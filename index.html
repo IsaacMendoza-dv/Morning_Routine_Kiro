@@ -199,19 +199,13 @@ header {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 12px 18px;
-  display: flex; align-items: center; gap: 14px;
-  margin-bottom: 28px;
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 12px;
   backdrop-filter: blur(12px);
-  font-size: 0.75rem;
-}
-@media (min-width: 768px) {
-  .weather-bar {
-    margin-top: 42px;
-    margin-bottom: 0;
-    max-width: 220px;
-    flex: 1;
-  }
+  font-size: 0.72rem;
+  width: 100%;
+  max-width: 280px;
+  box-sizing: border-box;
 }
 .weather-icon { font-size: 1.6rem; line-height: 1; }
 .weather-msg { color: var(--text); flex: 1; }
@@ -480,12 +474,6 @@ body::after {
         <div id="calendarEvents"><span class="cal-empty">cargando...</span></div>
       </div>
     </div>
-    
-    <div class="weather-bar" id="weatherBar">
-      <div class="weather-icon" id="weatherIcon">⏳</div>
-      <div class="weather-msg" id="weatherMsg">cargando pronóstico...</div>
-      <div class="weather-temp" id="weatherTemp"></div>
-    </div>
 
     <div class="header-right">
       <div class="countdown-block">
@@ -496,7 +484,14 @@ body::after {
           <input type="time" id="startTime" value="06:00">
         </div>
       </div>
-      <button class="btn-signout" id="btnSignOut">cerrar sesión</button>
+      
+      <div class="weather-bar" id="weatherBar" style="margin-top: 14px; margin-bottom: 0;">
+        <div class="weather-icon" id="weatherIcon">⏳</div>
+        <div class="weather-msg" id="weatherMsg">cargando pronóstico...</div>
+        <div class="weather-temp" id="weatherTemp"></div>
+      </div>
+
+      <button class="btn-signout" id="btnSignOut" style="margin-top: 12px;">cerrar sesión</button>
     </div>
   </header>
 
