@@ -703,7 +703,7 @@ document.getElementById('taskList').addEventListener('click', async e => {
     t.done = !t.done
     render()
     await patchTask(id, { done: t.done })
-    await logDay({ tasks_total: tasks.length, tasks_done: tasks.filter(t=>t.done).length })
+    try { await logDay({ tasks_total: tasks.length, tasks_done: tasks.filter(t=>t.done).length }) } catch {}
   }
 
   if (del) {
@@ -803,7 +803,7 @@ document.querySelectorAll('.mood-btn').forEach(btn => {
     if (btn.disabled) return
     document.querySelectorAll('.mood-btn').forEach(b => b.disabled = true)
     const mood = btn.dataset.mood
-    await logDay({ mood, tasks_total: tasks.length, tasks_done: tasks.filter(t=>t.done).length })
+    await logDay({ mood, tasks_total: tasks.length, tasks_done: tasks.filter(t=>t.done).length }).catch(()=>{})
     applyMoodUI(mood, true)
   })
 })
