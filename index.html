@@ -78,24 +78,20 @@
   .btn-primary:hover { background: rgba(0,255,170,0.18); }
   .btn-primary:disabled { opacity: 0.4; cursor: default; }
 
-  .auth-msg { font-size: 0.65rem; color: var(--accent2); text-align: center; min-height: 1em; }
-  .auth-msg.err { color: var(--danger); }
+  .auth-msg { font-size: 0.65rem; color: var(--danger); text-align: center; min-height: 1em; }
 
-  .auth-sent {
-    display: none; flex-direction: column; align-items: center; gap: 14px;
-    text-align: center;
+  .btn-google {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text);
+    font-family: inherit; font-size: 0.8rem;
+    padding: 12px; border-radius: 8px; cursor: pointer;
+    letter-spacing: 0.04em; transition: background 0.2s, border-color 0.2s;
+    width: 100%;
   }
-  .auth-sent.visible { display: flex; }
-  .auth-sent .sent-icon { font-size: 2rem; }
-  .auth-sent .sent-title { font-size: 0.85rem; color: var(--accent); }
-  .auth-sent .sent-sub { font-size: 0.65rem; color: var(--muted); line-height: 1.6; }
-  .auth-sent .sent-email { color: var(--accent2); }
-  .btn-resend {
-    background: none; border: 1px solid var(--border); color: var(--muted);
-    font-family: inherit; font-size: 0.62rem; padding: 6px 14px; border-radius: 6px;
-    cursor: pointer; letter-spacing: 0.08em; transition: all 0.2s; margin-top: 4px;
-  }
-  .btn-resend:hover { border-color: var(--accent2); color: var(--accent2); }
+  .btn-google:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+  .btn-google:disabled { opacity: 0.4; cursor: default; }
 
   /* ── App ── */
   .app {
@@ -243,20 +239,12 @@
   <div style="font-size:1.4rem;color:var(--accent);letter-spacing:0.08em">Hola Isaac 👋</div>
   <div class="auth-box">
     <div id="authForm" style="display:flex;flex-direction:column;gap:14px">
-      <label>ACCESO VÍA MAGIC LINK</label>
-      <input type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" style="margin-top:14px">
-      <button class="btn-primary" id="btnSendLink" style="margin-top:4px">enviar link →</button>
+      <label>INICIAR SESIÓN</label>
+      <button class="btn-google" id="btnGoogle">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.58-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+        Continuar con Google
+      </button>
       <div class="auth-msg" id="authMsg"></div>
-    </div>
-    <div class="auth-sent" id="authSent">
-      <div class="sent-icon">📨</div>
-      <div class="sent-title">link enviado</div>
-      <div class="sent-sub">
-        Revisa el inbox de<br>
-        <span class="sent-email" id="sentEmailLabel"></span><br><br>
-        Haz click en el link del correo<br>para iniciar sesión.
-      </div>
-      <button class="btn-resend" id="btnResend">← usar otro email</button>
     </div>
   </div>
 </div>
@@ -335,40 +323,20 @@ sb.auth.onAuthStateChange((_e, session) => {
   else showAuth()
 })
 
-document.getElementById('btnSendLink').addEventListener('click', async () => {
-  const email = document.getElementById('emailInput').value.trim()
+document.getElementById('btnGoogle').addEventListener('click', async () => {
+  const btn = document.getElementById('btnGoogle')
   const msg = document.getElementById('authMsg')
-  if (!email) { msg.textContent = 'ingresa tu email'; msg.className = 'auth-msg err'; return }
-  const btn = document.getElementById('btnSendLink')
   btn.disabled = true
-  btn.textContent = 'enviando...'
-  msg.textContent = ''
-  msg.className = 'auth-msg'
-  try {
-    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
-    if (error) throw error
-    document.getElementById('authForm').style.display = 'none'
-    document.getElementById('sentEmailLabel').textContent = email
-    document.getElementById('authSent').classList.add('visible')
-  } catch (err) {
-    msg.textContent = err.message || 'error al enviar — intenta de nuevo'
-    msg.className = 'auth-msg err'
+  btn.textContent = 'redirigiendo...'
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: 'https://morning-routine-kiro.vercel.app' }
+  })
+  if (error) {
+    msg.textContent = error.message
     btn.disabled = false
-    btn.textContent = 'enviar link →'
+    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.58-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg> Continuar con Google`
   }
-})
-
-document.getElementById('btnResend').addEventListener('click', () => {
-  document.getElementById('authSent').classList.remove('visible')
-  document.getElementById('authForm').style.display = 'flex'
-  document.getElementById('authForm').style.flexDirection = 'column'
-  document.getElementById('authForm').style.gap = '14px'
-  const btn = document.getElementById('btnSendLink')
-  btn.disabled = false
-  btn.textContent = 'enviar link →'
-  document.getElementById('authMsg').textContent = ''
-  document.getElementById('emailInput').value = ''
-  document.getElementById('emailInput').focus()
 })
 
 document.getElementById('btnSignOut').addEventListener('click', async () => {
