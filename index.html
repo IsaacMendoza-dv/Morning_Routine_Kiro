@@ -314,14 +314,18 @@ let startTime = localStorage.getItem('mr_startTime') || '05:30'
 let saveTimer = null
 
 // ── Auth ────────────────────────────────────────────────────────────────────
-const { data: { session } } = await sb.auth.getSession()
-if (session) showApp()
-else showAuth()
+async function init() {
+  const { data: { session } } = await sb.auth.getSession()
+  if (session) showApp()
+  else showAuth()
+}
 
 sb.auth.onAuthStateChange((_e, session) => {
   if (session) showApp()
   else showAuth()
 })
+
+init()
 
 document.getElementById('btnGoogle').addEventListener('click', async () => {
   const btn = document.getElementById('btnGoogle')
