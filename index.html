@@ -470,8 +470,12 @@ async function init() {
 }
 
 sb.auth.onAuthStateChange((_e, session) => {
-  if (session) showApp()
-  else showAuth()
+  if (session) {
+    if (session.provider_token) localStorage.setItem('mr_gtoken', session.provider_token)
+    showApp()
+  } else {
+    showAuth()
+  }
 })
 
 init()
@@ -515,12 +519,6 @@ async function showApp() {
 
 async function fetchCalendar() {
   try {
-    // grab provider_token from URL hash on first redirect, then persist it
-    const hash = Object.fromEntries(new URLSearchParams(window.location.hash.slice(1)))
-    if (hash.provider_token) {
-      localStorage.setItem('mr_gtoken', hash.provider_token)
-      window.history.replaceState(null, '', window.location.pathname)
-    }
     const token = localStorage.getItem('mr_gtoken')
     if (!token) {
       document.getElementById('calendarEvents').innerHTML = '<span class="cal-empty">reconecta con Google para ver tu agenda</span>'
