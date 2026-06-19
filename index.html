@@ -782,6 +782,8 @@ async function logDay(fields) {
     await sb.from('daily_log').insert({ user_id: user.id, date: today, ...fields })
   }
 }
+
+async function loadMood() {
   const today = new Date().toISOString().slice(0, 10)
   const { data } = await sb.from('daily_log').select('mood').eq('date', today).maybeSingle()
   if (data?.mood) applyMoodUI(data.mood)
