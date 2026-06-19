@@ -751,16 +751,18 @@ document.getElementById('startTime').addEventListener('change', e => {
 
 // ── Add / Reset ──────────────────────────────────────────────────────────────
 window.addTask = async function() {
-  const position = tasks.length
-  const newTask = await insertTask({ name: 'Nueva tarea', duration: 15, done: false, position })
-  if (!newTask) return
-  tasks.push(newTask)
-  render()
-  setTimeout(() => {
-    const names = document.querySelectorAll('.task-name')
-    const last  = names[names.length - 1]
-    if (last) { last.focus(); document.execCommand('selectAll', false, null) }
-  }, 50)
+  try {
+    const position = tasks.length
+    const newTask = await insertTask({ name: 'Nueva tarea', duration: 15, done: false, position })
+    if (!newTask) { console.error('insertTask returned null'); return }
+    tasks.push(newTask)
+    render()
+    setTimeout(() => {
+      const names = document.querySelectorAll('.task-name')
+      const last  = names[names.length - 1]
+      if (last) { last.focus(); document.execCommand('selectAll', false, null) }
+    }, 50)
+  } catch(e) { console.error('addTask error:', e) }
 }
 
 window.resetDay = async function() {
