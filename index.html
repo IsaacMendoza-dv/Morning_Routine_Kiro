@@ -424,6 +424,16 @@ body::after {
   pointer-events: none; z-index: 2;
 }
 
+.pending-history-toggle {
+  background: none; border: none; color: var(--muted); font-family: inherit;
+  font-size: 0.65rem; cursor: pointer; letter-spacing: 0.1em; padding: 0;
+  display: flex; align-items: center; gap: 6px; margin-top: 18px; margin-bottom: 8px;
+  transition: color 0.2s;
+}
+.pending-history-toggle:hover { color: var(--accent2); }
+.pending-history-panel { display: none; flex-direction: column; gap: 8px; margin-top: 8px; }
+.pending-history-panel.open { display: flex; }
+
 @media (max-width: 500px) {
   .countdown-time { font-size: 2rem; }
   .task-card { grid-template-columns: 28px 1fr auto; }
@@ -500,6 +510,10 @@ body::after {
     <div class="pending-list" id="pendingList">
       <div style="font-size:0.65rem;color:var(--muted);padding:8px 0">cargando...</div>
     </div>
+    <button class="pending-history-toggle" id="pendingHistoryToggle" onclick="togglePendingHistory()">
+      <span id="pendingHistoryArrow">▶</span> // historial de pendientes realizados
+    </button>
+    <div class="pending-history-panel" id="pendingHistoryPanel"></div>
   </div>
 
   <!-- Mood check-in -->
@@ -615,6 +629,15 @@ async function showApp() {
   fetchWeather()
   loadMood()
   fetchCalendar()
+  
+  const isPendingHistoryOpen = localStorage.getItem('mr_pendingHistoryOpen') === 'true'
+  const phPanel = document.getElementById('pendingHistoryPanel')
+  const phArrow = document.getElementById('pendingHistoryArrow')
+  if (phPanel && phArrow && isPendingHistoryOpen) {
+    phPanel.classList.add('open')
+    phArrow.textContent = '▼'
+  }
+  
   loadPending()   // ← NUEVO
 }
 
@@ -1042,6 +1065,13 @@ function daysLabel(days) {
   return `${days} días`
 }
 
+function formatCompletedDate(dateStr) {
+  if (!dateStr) return 'fecha desconocida'
+  const [y, m, d] = dateStr.split('T')[0].split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
+}
+
 async function loadPending() {
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return
@@ -1055,54 +1085,82 @@ async function loadPending() {
 }
 
 function renderPending() {
-  // Primero no completados (por fecha), luego completados
-  const sorted = [...pendingItems].sort((a, b) => {
-    if (a.done !== b.done) return a.done ? 1 : -1
-    return a.due_date.localeCompare(b.due_date)
+  const active = pendingItems.filter(p => !p.done).sort((a, b) => a.due_date.localeCompare(b.due_date))
+  const completed = pendingItems.filter(p => p.done).sort((a, b) => {
+    const da = a.completed_at || ''
+    const db = b.completed_at || ''
+    return db.localeCompare(da)
   })
 
   const list = document.getElementById('pendingList')
   list.innerHTML = ''
 
-  if (sorted.length === 0) {
+  if (active.length === 0) {
     list.innerHTML = '<div style="font-size:0.65rem;color:var(--muted);padding:8px 0">sin pendientes — ¡todo en orden! ✓</div>'
-    return
+  } else {
+    active.forEach(item => {
+      const days = getDaysLeft(item.due_date)
+      const urg  = urgencyClass(days, item.done)
+
+      const card = document.createElement('div')
+      card.className = `pending-card ${urg}`
+      card.innerHTML = `
+        <div class="pending-check" data-pid="${item.id}"></div>
+        <div class="pending-body">
+          <div class="pending-title" contenteditable="true" spellcheck="false" data-pid="${item.id}">${item.title}</div>
+          <div class="pending-due">
+            <input type="date" value="${item.due_date}" data-pid="${item.id}">
+            <span class="pending-days">${daysLabel(days)}</span>
+          </div>
+        </div>
+        <div></div>
+        <button class="btn-del-pending" data-pid="${item.id}">×</button>
+      `
+      list.appendChild(card)
+    })
   }
 
-  sorted.forEach(item => {
-    const days = getDaysLeft(item.due_date)
-    const urg  = urgencyClass(days, item.done)
-
-    const card = document.createElement('div')
-    card.className = `pending-card ${urg} ${item.done ? 'done' : ''}`
-    card.innerHTML = `
-      <div class="pending-check ${item.done ? 'checked' : ''}" data-pid="${item.id}"></div>
-      <div class="pending-body">
-        <div class="pending-title" contenteditable="true" spellcheck="false" data-pid="${item.id}">${item.title}</div>
-        <div class="pending-due">
-          <input type="date" value="${item.due_date}" data-pid="${item.id}">
-          <span class="pending-days">${daysLabel(days)}</span>
-        </div>
-      </div>
-      <div></div>
-      <button class="btn-del-pending" data-pid="${item.id}">×</button>
-    `
-    list.appendChild(card)
-  })
+  const historyPanel = document.getElementById('pendingHistoryPanel')
+  if (historyPanel) {
+    if (completed.length === 0) {
+      historyPanel.innerHTML = '<div style="font-size:0.65rem;color:var(--muted);padding:8px 0">no hay pendientes realizados</div>'
+    } else {
+      historyPanel.innerHTML = ''
+      completed.forEach(item => {
+        const card = document.createElement('div')
+        card.className = `pending-card done`
+        card.innerHTML = `
+          <div class="pending-check checked" data-pid="${item.id}"></div>
+          <div class="pending-body">
+            <div class="pending-title" style="text-decoration: line-through; color: var(--muted);" data-pid="${item.id}">${item.title}</div>
+            <div class="pending-due">
+              <span style="font-size: 0.62rem; color: var(--muted);">completado: ${formatCompletedDate(item.completed_at)}</span>
+            </div>
+          </div>
+          <div></div>
+          <button class="btn-del-pending" data-pid="${item.id}">×</button>
+        `
+        historyPanel.appendChild(card)
+      })
+    }
+  }
 }
 
-document.getElementById('pendingList').addEventListener('click', async e => {
+async function handlePendingClick(e) {
   const check = e.target.closest('.pending-check')
   const del   = e.target.closest('.btn-del-pending')
+  const daysSpan = e.target.closest('.pending-days')
+  const dueDiv   = e.target.closest('.pending-due')
 
   if (check) {
     const id   = check.dataset.pid
     const item = pendingItems.find(p => String(p.id) === String(id))
     if (!item) return
     item.done = !item.done
+    item.completed_at = item.done ? new Date().toISOString() : null
     renderPending()
     flashSaving()
-    await sb.from('pending_items').update({ done: item.done }).eq('id', id)
+    await sb.from('pending_items').update({ done: item.done, completed_at: item.completed_at }).eq('id', id)
   }
 
   if (del) {
@@ -1112,9 +1170,21 @@ document.getElementById('pendingList').addEventListener('click', async e => {
     flashSaving()
     await sb.from('pending_items').delete().eq('id', id)
   }
-})
 
-document.getElementById('pendingList').addEventListener('input', async e => {
+  if (daysSpan || (dueDiv && e.target.tagName !== 'INPUT')) {
+    const card = e.target.closest('.pending-card')
+    const input = card ? card.querySelector('input[type="date"]') : null
+    if (input) {
+      try {
+        input.showPicker()
+      } catch(err) {
+        console.warn("showPicker is not supported or failed:", err)
+      }
+    }
+  }
+}
+
+async function handlePendingInput(e) {
   const titleEl = e.target.closest('.pending-title')
   const dateEl  = e.target.closest('input[type="date"]')
 
@@ -1139,7 +1209,22 @@ document.getElementById('pendingList').addEventListener('input', async e => {
     flashSaving()
     await sb.from('pending_items').update({ due_date: item.due_date }).eq('id', id)
   }
-})
+}
+
+document.getElementById('pendingList').addEventListener('click', handlePendingClick)
+document.getElementById('pendingHistoryPanel').addEventListener('click', handlePendingClick)
+document.getElementById('pendingList').addEventListener('input', handlePendingInput)
+document.getElementById('pendingHistoryPanel').addEventListener('input', handlePendingInput)
+
+window.togglePendingHistory = function() {
+  const panel = document.getElementById('pendingHistoryPanel')
+  const arrow = document.getElementById('pendingHistoryArrow')
+  if (!panel || !arrow) return
+  const isOpen = panel.classList.toggle('open')
+  arrow.textContent = isOpen ? '▼' : '▶'
+  localStorage.setItem('mr_pendingHistoryOpen', isOpen)
+  renderPending()
+}
 
 window.addPending = async function() {
   const { data: { user } } = await sb.auth.getUser()
