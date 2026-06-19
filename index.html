@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morning Routine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #060a0f;
+    --surface: rgba(10, 18, 28, 0.75);
+    --border: rgba(0, 255, 170, 0.18);
+    --accent: #00ffaa;
+    --accent2: #00aaff;
+    --warn: #ffaa00;
+    --danger: #ff4466;
+    --text: #c8d8e8;
+    --muted: #4a6070;
+  }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  canvas#particles {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+
+  /* ── Auth screen ── */
+  #authScreen {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; gap: 24px; padding: 20px;
+  }
+
+  #authScreen h1 { font-size: 1rem; color: var(--muted); letter-spacing: 0.15em; }
+
+  .auth-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    backdrop-filter: blur(12px);
+    display: flex; flex-direction: column; gap: 14px;
+    width: 100%; max-width: 360px;
+  }
+
+  .auth-box label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
+
+  .auth-box input[type="email"] {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit; font-size: 0.85rem;
+    padding: 10px 14px; border-radius: 7px; outline: none; width: 100%;
+    transition: border-color 0.2s;
+  }
+  .auth-box input[type="email"]:focus { border-color: var(--accent2); }
+
+  .btn-primary {
+    background: rgba(0,255,170,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: inherit; font-size: 0.72rem;
+    padding: 10px; border-radius: 7px; cursor: pointer;
+    letter-spacing: 0.1em; transition: background 0.2s;
+  }
+  .btn-primary:hover { background: rgba(0,255,170,0.18); }
+  .btn-primary:disabled { opacity: 0.4; cursor: default; }
+
+  .auth-msg { font-size: 0.65rem; color: var(--accent2); text-align: center; min-height: 1em; }
+  .auth-msg.err { color: var(--danger); }
+
+  /* ── App ── */
+  .app {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 780px;
+    padding: 32px 20px 60px;
+    display: none;
+  }
+
+  header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 36px; flex-wrap: wrap; gap: 16px;
+  }
+
+  .header-left h1 { font-size: 1.1rem; font-weight: 400; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
+  .header-left .date { font-size: 0.72rem; color: var(--muted); margin-top: 4px; opacity: 0.6; }
+
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+  .countdown-block { text-align: right; }
+  .countdown-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; }
+  .countdown-time { font-size: 2.8rem; font-weight: 700; letter-spacing: 0.04em; line-height: 1; transition: color 0.4s; }
+  .countdown-time.on-time { color: var(--accent); text-shadow: 0 0 20px rgba(0,255,170,0.4); }
+  .countdown-time.warning  { color: var(--warn);   text-shadow: 0 0 20px rgba(255,170,0,0.4); }
+  .countdown-time.late     { color: var(--danger);  text-shadow: 0 0 20px rgba(255,68,102,0.4); }
+
+  .start-config {
+    font-size: 0.62rem; color: var(--muted);
+    display: flex; align-items: center; justify-content: flex-end; gap: 6px;
+  }
+  .start-config input[type="time"] {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--accent2); font-family: inherit; font-size: 0.62rem;
+    padding: 2px 6px; border-radius: 4px; outline: none; cursor: pointer;
+  }
+  .start-config input[type="time"]:focus { border-color: var(--accent2); }
+
+  .btn-signout {
+    background: none; border: 1px solid rgba(255,255,255,0.08);
+    color: var(--muted); font-family: inherit; font-size: 0.58rem;
+    padding: 3px 9px; border-radius: 5px; cursor: pointer;
+    letter-spacing: 0.08em; transition: all 0.2s;
+  }
+  .btn-signout:hover { border-color: var(--danger); color: var(--danger); }
+
+  .progress-wrap { margin-bottom: 28px; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.08em; }
+  .progress-bar-bg { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.5s ease; box-shadow: 0 0 8px rgba(0,255,170,0.5); }
+
+  .tasks-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .tasks-header span { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; }
+
+  .btn-add {
+    background: none; border: 1px solid var(--border); color: var(--accent);
+    font-family: inherit; font-size: 0.65rem; padding: 5px 12px;
+    border-radius: 6px; cursor: pointer; letter-spacing: 0.1em; transition: background 0.2s, border-color 0.2s;
+  }
+  .btn-add:hover { background: rgba(0,255,170,0.07); border-color: var(--accent); }
+
+  .task-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .task-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; display: grid; grid-template-columns: 28px 1fr auto auto;
+    align-items: center; gap: 12px; backdrop-filter: blur(12px);
+    transition: border-color 0.25s, opacity 0.25s, transform 0.2s;
+  }
+  .task-card:hover { border-color: rgba(0,255,170,0.3); transform: translateX(2px); }
+  .task-card.done { opacity: 0.5; border-color: rgba(0,255,170,0.1); }
+  .task-card.done .task-name { text-decoration: line-through; color: var(--muted); }
+
+  .task-check {
+    width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, border-color 0.2s; flex-shrink: 0;
+  }
+  .task-check:hover { border-color: var(--accent); }
+  .task-check.checked { background: var(--accent); border-color: var(--accent); }
+  .task-check.checked::after { content: '✓'; font-size: 0.7rem; color: #000; font-weight: 700; }
+
+  .task-body { min-width: 0; }
+  .task-name {
+    font-size: 0.88rem; font-weight: 500; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    outline: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; cursor: text;
+  }
+  .task-name:focus { border-color: var(--accent2); color: #fff; }
+
+  .task-duration { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+  .task-duration input {
+    background: transparent; border: none; border-bottom: 1px solid var(--border);
+    color: var(--accent2); font-family: inherit; font-size: 0.65rem;
+    width: 32px; text-align: center; outline: none; padding: 0 2px;
+  }
+  .task-duration input:focus { border-color: var(--accent2); }
+  .task-duration span { font-size: 0.62rem; color: var(--muted); }
+
+  .task-time-slot { font-size: 0.65rem; color: var(--muted); white-space: nowrap; text-align: right; }
+
+  .btn-del {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 1rem; padding: 0 2px; line-height: 1; transition: color 0.2s; opacity: 0;
+  }
+  .task-card:hover .btn-del { opacity: 1; }
+  .btn-del:hover { color: var(--danger); }
+
+  .footer-info {
+    margin-top: 32px; display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.62rem; color: var(--muted); letter-spacing: 0.08em; flex-wrap: wrap; gap: 8px;
+  }
+  .btn-reset {
+    background: none; border: 1px solid rgba(255,68,102,0.25); color: rgba(255,68,102,0.5);
+    font-family: inherit; font-size: 0.6rem; padding: 4px 10px; border-radius: 5px;
+    cursor: pointer; letter-spacing: 0.1em; transition: all 0.2s;
+  }
+  .btn-reset:hover { border-color: var(--danger); color: var(--danger); }
+
+  .saving-indicator {
+    font-size: 0.6rem; color: var(--muted); opacity: 0;
+    transition: opacity 0.3s; position: fixed; bottom: 16px; right: 20px; z-index: 10;
+  }
+  .saving-indicator.visible { opacity: 1; }
+
+  body::after {
+    content: ''; position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none; z-index: 2;
+  }
+
+  @media (max-width: 500px) {
+    .countdown-time { font-size: 2rem; }
+    .task-card { grid-template-columns: 28px 1fr auto; }
+    .task-time-slot { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- Auth -->
+<div id="authScreen">
+  <h1>// morning_routine</h1>
+  <div class="auth-box">
+    <label>ACCESO VÍA MAGIC LINK</label>
+    <input type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email">
+    <button class="btn-primary" id="btnSendLink">enviar link →</button>
+    <div class="auth-msg" id="authMsg"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div class="app" id="appScreen">
+  <header>
+    <div class="header-left">
+      <h1>// morning_routine</h1>
+      <div class="date" id="dateLabel"></div>
+    </div>
+    <div class="header-right">
+      <div class="countdown-block">
+        <div class="countdown-label">tiempo restante → 08:00</div>
+        <div class="countdown-time on-time" id="countdown">--:--:--</div>
+        <div class="start-config">
+          <span>inicio</span>
+          <input type="time" id="startTime" value="05:30">
+        </div>
+      </div>
+      <button class="btn-signout" id="btnSignOut">cerrar sesión</button>
+    </div>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="progressLabel">0 / 0 tareas completadas</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="tasks-header">
+    <span>// tareas</span>
+    <button class="btn-add" onclick="addTask()">+ nueva tarea</button>
+  </div>
+
+  <div class="task-list" id="taskList"></div>
+
+  <div class="footer-info">
+    <span id="totalTimeInfo"></span>
+    <button class="btn-reset" onclick="resetDay()">↺ reiniciar día</button>
+  </div>
+</div>
+
+<div class="saving-indicator" id="savingIndicator">guardando...</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const SUPABASE_URL = 'https://ysoaipscjkuritviyopf.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_DjojLjFLN5y7F2NytE0JQA_RUIs-Xrf'
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+const DEFAULT_TASKS = [
+  { name: 'Quehacer del hogar', duration: 30, done: false, position: 0 },
+  { name: 'Ejercicio',          duration: 40, done: false, position: 1 },
+  { name: 'Desayuno',           duration: 20, done: false, position: 2 },
+  { name: 'Estudio / lectura',  duration: 30, done: false, position: 3 },
+  { name: 'Arreglarme',         duration: 20, done: false, position: 4 },
+]
+
+let tasks = []
+let startTime = localStorage.getItem('mr_startTime') || '05:30'
+let saveTimer = null
+
+// ── Auth ────────────────────────────────────────────────────────────────────
+const { data: { session } } = await sb.auth.getSession()
+if (session) showApp()
+else showAuth()
+
+sb.auth.onAuthStateChange((_e, session) => {
+  if (session) showApp()
+  else showAuth()
+})
+
+document.getElementById('btnSendLink').addEventListener('click', async () => {
+  const email = document.getElementById('emailInput').value.trim()
+  if (!email) return
+  const btn = document.getElementById('btnSendLink')
+  const msg = document.getElementById('authMsg')
+  btn.disabled = true
+  btn.textContent = 'enviando...'
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
+  if (error) {
+    msg.textContent = error.message
+    msg.className = 'auth-msg err'
+    btn.disabled = false
+    btn.textContent = 'enviar link →'
+  } else {
+    msg.textContent = '✓ revisa tu email — el link expira en 1 hora'
+    msg.className = 'auth-msg'
+  }
+})
+
+document.getElementById('btnSignOut').addEventListener('click', async () => {
+  await sb.auth.signOut()
+})
+
+// ── App ─────────────────────────────────────────────────────────────────────
+async function showApp() {
+  document.getElementById('authScreen').style.display = 'none'
+  document.getElementById('appScreen').style.display = 'block'
+  document.getElementById('startTime').value = startTime
+  await loadTasks()
+  render()
+  updateCountdown()
+  setInterval(updateCountdown, 1000)
+}
+
+function showAuth() {
+  document.getElementById('authScreen').style.display = 'flex'
+  document.getElementById('appScreen').style.display = 'none'
+}
+
+async function loadTasks() {
+  const { data, error } = await sb.from('tasks').select('*').order('position')
+  if (error) { console.error(error); return }
+  if (data.length === 0) {
+    // first login — seed default tasks
+    const { data: inserted } = await sb.from('tasks')
+      .insert(DEFAULT_TASKS.map(t => ({ ...t, user_id: (await sb.auth.getUser()).data.user.id })))
+      .select()
+    tasks = inserted || []
+  } else {
+    tasks = data
+  }
+}
+
+// ── Render ──────────────────────────────────────────────────────────────────
+function render() {
+  const list = document.getElementById('taskList')
+  list.innerHTML = ''
+  const [sh, sm] = startTime.split(':').map(Number)
+  let cursor = sh * 60 + sm
+
+  tasks.forEach(task => {
+    const sHH = String(Math.floor(cursor / 60)).padStart(2, '0')
+    const sMM = String(cursor % 60).padStart(2, '0')
+    cursor += Number(task.duration) || 0
+    const eHH = String(Math.floor(cursor / 60)).padStart(2, '0')
+    const eMM = String(cursor % 60).padStart(2, '0')
+
+    const card = document.createElement('div')
+    card.className = 'task-card' + (task.done ? ' done' : '')
+    card.innerHTML = `
+      <div class="task-check ${task.done ? 'checked' : ''}" data-id="${task.id}"></div>
+      <div class="task-body">
+        <div class="task-name" contenteditable="true" spellcheck="false" data-id="${task.id}">${task.name}</div>
+        <div class="task-duration">
+          <input type="number" min="1" max="180" value="${task.duration}" data-id="${task.id}">
+          <span>min</span>
+        </div>
+      </div>
+      <div class="task-time-slot">${sHH}:${sMM} → ${eHH}:${eMM}</div>
+      <button class="btn-del" data-id="${task.id}">×</button>
+    `
+    list.appendChild(card)
+  })
+
+  updateProgress()
+  updateTotalInfo(cursor, sh * 60 + sm)
+}
+
+function updateProgress() {
+  const total = tasks.length
+  const done  = tasks.filter(t => t.done).length
+  const pct   = total ? Math.round(done / total * 100) : 0
+  document.getElementById('progressLabel').textContent = `${done} / ${total} tareas completadas`
+  document.getElementById('progressPct').textContent   = `${pct}%`
+  document.getElementById('progressFill').style.width  = pct + '%'
+}
+
+function updateTotalInfo(endMin, startMin) {
+  const eHH = String(Math.floor(endMin / 60)).padStart(2, '0')
+  const eMM = String(endMin % 60).padStart(2, '0')
+  document.getElementById('totalTimeInfo').textContent =
+    `total: ${endMin - startMin} min  ·  fin estimado: ${eHH}:${eMM}`
+}
+
+// ── Supabase writes (debounced) ──────────────────────────────────────────────
+function flashSaving() {
+  const el = document.getElementById('savingIndicator')
+  el.classList.add('visible')
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => el.classList.remove('visible'), 1200)
+}
+
+async function patchTask(id, fields) {
+  flashSaving()
+  await sb.from('tasks').update(fields).eq('id', id)
+}
+
+async function deleteTask(id) {
+  flashSaving()
+  await sb.from('tasks').delete().eq('id', id)
+}
+
+async function insertTask(task) {
+  flashSaving()
+  const { data: { user } } = await sb.auth.getUser()
+  const { data } = await sb.from('tasks').insert({ ...task, user_id: user.id }).select().single()
+  return data
+}
+
+// ── Events ───────────────────────────────────────────────────────────────────
+document.getElementById('taskList').addEventListener('click', async e => {
+  const check = e.target.closest('.task-check')
+  const del   = e.target.closest('.btn-del')
+
+  if (check) {
+    const id = check.dataset.id
+    const t  = tasks.find(t => t.id === id)
+    if (!t) return
+    t.done = !t.done
+    render()
+    await patchTask(id, { done: t.done })
+  }
+
+  if (del) {
+    const id = del.dataset.id
+    tasks = tasks.filter(t => t.id !== id)
+    render()
+    await deleteTask(id)
+  }
+})
+
+let nameDebounce = {}
+document.getElementById('taskList').addEventListener('input', async e => {
+  const nameEl = e.target.closest('.task-name')
+  const durEl  = e.target.closest('input[type="number"]')
+
+  if (nameEl) {
+    const id = nameEl.dataset.id
+    const t  = tasks.find(t => t.id === id)
+    if (!t) return
+    t.name = nameEl.textContent.trim()
+    updateProgress()
+    clearTimeout(nameDebounce[id])
+    nameDebounce[id] = setTimeout(() => patchTask(id, { name: t.name }), 700)
+  }
+
+  if (durEl) {
+    const id = durEl.dataset.id
+    const t  = tasks.find(t => t.id === id)
+    if (!t) return
+    t.duration = Number(durEl.value)
+    render()
+    clearTimeout(nameDebounce['dur_' + id])
+    nameDebounce['dur_' + id] = setTimeout(() => patchTask(id, { duration: t.duration }), 700)
+  }
+})
+
+document.getElementById('startTime').addEventListener('change', e => {
+  startTime = e.target.value
+  localStorage.setItem('mr_startTime', startTime)
+  render()
+})
+
+// ── Add / Reset ──────────────────────────────────────────────────────────────
+window.addTask = async function() {
+  const position = tasks.length
+  const newTask = await insertTask({ name: 'Nueva tarea', duration: 15, done: false, position })
+  if (!newTask) return
+  tasks.push(newTask)
+  render()
+  setTimeout(() => {
+    const names = document.querySelectorAll('.task-name')
+    const last  = names[names.length - 1]
+    if (last) { last.focus(); document.execCommand('selectAll', false, null) }
+  }, 50)
+}
+
+window.resetDay = async function() {
+  if (!confirm('¿Reiniciar el progreso del día?')) return
+  tasks.forEach(t => t.done = false)
+  render()
+  flashSaving()
+  await Promise.all(tasks.map(t => sb.from('tasks').update({ done: false }).eq('id', t.id)))
+}
+
+// ── Countdown ────────────────────────────────────────────────────────────────
+function updateCountdown() {
+  const now    = new Date()
+  const target = new Date(now)
+  target.setHours(8, 0, 0, 0)
+  if (now >= target) target.setDate(target.getDate() + 1)
+  const diff = Math.floor((target - now) / 1000)
+  const h = String(Math.floor(diff / 3600)).padStart(2, '0')
+  const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0')
+  const s = String(diff % 60).padStart(2, '0')
+  const el = document.getElementById('countdown')
+  el.textContent = `${h}:${m}:${s}`
+  el.className = 'countdown-time ' + (diff > 3600 ? 'on-time' : diff > 900 ? 'warning' : 'late')
+  document.getElementById('dateLabel').textContent =
+    now.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
+}
+
+// ── Particles ────────────────────────────────────────────────────────────────
+;(function() {
+  const canvas = document.getElementById('particles')
+  const ctx    = canvas.getContext('2d')
+  let W, H, pts
+  const N = 90
+  const resize = () => { W = canvas.width = innerWidth; H = canvas.height = innerHeight }
+  const mk = () => ({ x: Math.random()*W, y: Math.random()*H, vx: (Math.random()-.5)*.35, vy: (Math.random()-.5)*.35, r: Math.random()*1.4+.4, a: Math.random()*.5+.1 })
+  const init = () => { pts = Array.from({length:N}, mk) }
+  function draw() {
+    ctx.clearRect(0,0,W,H)
+    for (let i=0;i<N;i++) for (let j=i+1;j<N;j++) {
+      const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy)
+      if (d<130) { ctx.beginPath(); ctx.strokeStyle=`rgba(0,255,170,${.07*(1-d/130)})`; ctx.lineWidth=.5; ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y); ctx.stroke() }
+    }
+    pts.forEach(p => {
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=`rgba(0,200,255,${p.a})`; ctx.fill()
+      p.x+=p.vx; p.y+=p.vy
+      if(p.x<0||p.x>W) p.vx*=-1
+      if(p.y<0||p.y>H) p.vy*=-1
+    })
+    requestAnimationFrame(draw)
+  }
+  window.addEventListener('resize', resize)
+  resize(); init(); draw()
+})()
+</script>
+</body>
+</html>
