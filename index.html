@@ -1021,9 +1021,10 @@ let pendingItems   = []
 let pendingDebounce = {}
 
 function getDaysLeft(dueDateStr) {
+  const [y, m, d] = dueDateStr.split('-').map(Number)
+  const due   = new Date(y, m - 1, d)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const due = new Date(dueDateStr + 'T00:00:00')
   return Math.ceil((due - today) / (1000 * 60 * 60 * 24))
 }
 
@@ -1042,8 +1043,11 @@ function daysLabel(days) {
 }
 
 async function loadPending() {
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return
   const { data, error } = await sb.from('pending_items')
     .select('*')
+    .eq('user_id', user.id)
     .order('due_date')
   if (error) { console.error(error); return }
   pendingItems = data || []
@@ -1141,10 +1145,9 @@ window.addPending = async function() {
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return
 
-  // Fecha por defecto: 7 días desde hoy
   const due = new Date()
   due.setDate(due.getDate() + 7)
-  const dueStr = due.toISOString().slice(0, 10)
+  const dueStr = `${due.getFullYear()}-${String(due.getMonth()+1).padStart(2,'0')}-${String(due.getDate()).padStart(2,'0')}`
 
   const { data, error } = await sb.from('pending_items')
     .insert({ user_id: user.id, title: 'Nuevo pendiente', due_date: dueStr, done: false })
@@ -1159,7 +1162,21 @@ window.addPending = async function() {
   setTimeout(() => {
     const titles = document.querySelectorAll('.pending-title')
     const match  = [...titles].find(el => el.dataset.pid === data.id)
-    if (match) { match.focus(); document.execCommand('selectAll', false, null) }
+    if (match) {
+      match.focus()
+      document.execCommand('selectAll', false, null)
+      // Guardar cuando el usuario termina de escribir el título
+      match.addEventListener('blur', async function onBlur() {
+        match.removeEventListener('blur', onBlur)
+        const newTitle = match.textContent.trim()
+        if (newTitle && newTitle !== 'Nuevo pendiente') {
+          const item = pendingItems.find(p => p.id === data.id)
+          if (item) item.title = newTitle
+          flashSaving()
+          await sb.from('pending_items').update({ title: newTitle }).eq('id', data.id)
+        }
+      })
+    }
   }, 50)
 }
 
