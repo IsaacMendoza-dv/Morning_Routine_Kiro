@@ -8,346 +8,431 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #060a0f;
+  --surface: rgba(10, 18, 28, 0.75);
+  --border: rgba(0, 255, 170, 0.18);
+  --accent: #00ffaa;
+  --accent2: #00aaff;
+  --warn: #ffaa00;
+  --danger: #ff4466;
+  --text: #c8d8e8;
+  --muted: #4a6070;
+}
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+canvas#particles {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
 
-  :root {
-    --bg: #060a0f;
-    --surface: rgba(10, 18, 28, 0.75);
-    --border: rgba(0, 255, 170, 0.18);
-    --accent: #00ffaa;
-    --accent2: #00aaff;
-    --warn: #ffaa00;
-    --danger: #ff4466;
-    --text: #c8d8e8;
-    --muted: #4a6070;
-  }
+/* ── Auth screen ── */
+#authScreen {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; gap: 24px; padding: 20px;
+}
+#authScreen h1 { font-size: 1rem; color: var(--muted); letter-spacing: 0.15em; }
+.auth-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  backdrop-filter: blur(12px);
+  display: flex; flex-direction: column; gap: 14px;
+  width: 100%; max-width: 360px;
+}
+.auth-box label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
+.auth-box input[type="email"] {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit; font-size: 0.85rem;
+  padding: 10px 14px; border-radius: 7px; outline: none; width: 100%;
+  transition: border-color 0.2s;
+}
+.auth-box input[type="email"]:focus { border-color: var(--accent2); }
+.btn-primary {
+  background: rgba(0,255,170,0.1);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: inherit; font-size: 0.72rem;
+  padding: 10px; border-radius: 7px; cursor: pointer;
+  letter-spacing: 0.1em; transition: background 0.2s;
+}
+.btn-primary:hover { background: rgba(0,255,170,0.18); }
+.btn-primary:disabled { opacity: 0.4; cursor: default; }
+.auth-msg { font-size: 0.65rem; color: var(--danger); text-align: center; min-height: 1em; }
+.btn-google {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--text);
+  font-family: inherit; font-size: 0.8rem;
+  padding: 12px; border-radius: 8px; cursor: pointer;
+  letter-spacing: 0.04em; transition: background 0.2s, border-color 0.2s;
+  width: 100%;
+}
+.btn-google:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+.btn-google:disabled { opacity: 0.4; cursor: default; }
 
-  body {
-    font-family: 'JetBrains Mono', monospace;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+/* ── App ── */
+.app {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 780px;
+  padding: 32px 20px 60px;
+  display: none;
+}
+header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 36px; flex-wrap: wrap; gap: 16px;
+}
+.header-left h1 { font-size: 1.1rem; font-weight: 400; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
+.header-left .date { font-size: 0.72rem; color: var(--muted); margin-top: 4px; opacity: 0.6; }
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.countdown-block { text-align: right; }
+.countdown-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; }
+.countdown-time { font-size: 2.8rem; font-weight: 700; letter-spacing: 0.04em; line-height: 1; transition: color 0.4s; }
+.countdown-time.on-time { color: var(--accent); text-shadow: 0 0 20px rgba(0,255,170,0.4); }
+.countdown-time.warning { color: var(--warn); text-shadow: 0 0 20px rgba(255,170,0,0.4); }
+.countdown-time.late { color: var(--danger); text-shadow: 0 0 20px rgba(255,68,102,0.4); }
+.start-config {
+  font-size: 0.62rem; color: var(--muted);
+  display: flex; align-items: center; justify-content: flex-end; gap: 6px;
+}
+.start-config input[type="time"] {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--accent2); font-family: inherit; font-size: 0.62rem;
+  padding: 2px 6px; border-radius: 4px; outline: none; cursor: pointer;
+}
+.start-config input[type="time"]:focus { border-color: var(--accent2); }
+.btn-signout {
+  background: none; border: 1px solid rgba(255,255,255,0.08);
+  color: var(--muted); font-family: inherit; font-size: 0.58rem;
+  padding: 3px 9px; border-radius: 5px; cursor: pointer;
+  letter-spacing: 0.08em; transition: all 0.2s;
+}
+.btn-signout:hover { border-color: var(--danger); color: var(--danger); }
 
-  canvas#particles {
-    position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  }
+.progress-wrap { margin-bottom: 28px; }
+.progress-meta { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.08em; }
+.progress-bar-bg { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.5s ease; box-shadow: 0 0 8px rgba(0,255,170,0.5); }
 
-  /* ── Auth screen ── */
-  #authScreen {
-    position: relative; z-index: 1;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 100vh; gap: 24px; padding: 20px;
-  }
+.tasks-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.tasks-header span { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; }
+.btn-add {
+  background: none; border: 1px solid var(--border); color: var(--accent);
+  font-family: inherit; font-size: 0.65rem; padding: 5px 12px;
+  border-radius: 6px; cursor: pointer; letter-spacing: 0.1em; transition: background 0.2s, border-color 0.2s;
+}
+.btn-add:hover { background: rgba(0,255,170,0.07); border-color: var(--accent); }
 
-  #authScreen h1 { font-size: 1rem; color: var(--muted); letter-spacing: 0.15em; }
+.task-list { display: flex; flex-direction: column; gap: 10px; }
+.task-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; display: grid; grid-template-columns: 28px 1fr auto auto;
+  align-items: center; gap: 12px; backdrop-filter: blur(12px);
+  transition: border-color 0.25s, opacity 0.25s, transform 0.2s;
+}
+.task-card:hover { border-color: rgba(0,255,170,0.3); transform: translateX(2px); }
+.task-card.done { opacity: 0.5; border-color: rgba(0,255,170,0.1); }
+.task-card.done .task-name { text-decoration: line-through; color: var(--muted); }
+.task-check {
+  width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, border-color 0.2s; flex-shrink: 0;
+}
+.task-check:hover { border-color: var(--accent); }
+.task-check.checked { background: var(--accent); border-color: var(--accent); }
+.task-check.checked::after { content: '✓'; font-size: 0.7rem; color: #000; font-weight: 700; }
+.task-body { min-width: 0; }
+.task-name {
+  font-size: 0.88rem; font-weight: 500; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  outline: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; cursor: text;
+}
+.task-name:focus { border-color: var(--accent2); color: #fff; }
+.task-duration { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.task-duration input {
+  background: transparent; border: none; border-bottom: 1px solid var(--border);
+  color: var(--accent2); font-family: inherit; font-size: 0.65rem;
+  width: 32px; text-align: center; outline: none; padding: 0 2px;
+}
+.task-duration input:focus { border-color: var(--accent2); }
+.task-duration span { font-size: 0.62rem; color: var(--muted); }
+.task-time-slot { font-size: 0.65rem; color: var(--muted); white-space: nowrap; text-align: right; }
+.btn-del {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: 1rem; padding: 0 2px; line-height: 1; transition: color 0.2s; opacity: 0;
+}
+.task-card:hover .btn-del { opacity: 1; }
+.btn-del:hover { color: var(--danger); }
 
-  .auth-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px 32px;
-    backdrop-filter: blur(12px);
-    display: flex; flex-direction: column; gap: 14px;
-    width: 100%; max-width: 360px;
-  }
+.footer-info {
+  margin-top: 32px; display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.62rem; color: var(--muted); letter-spacing: 0.08em; flex-wrap: wrap; gap: 8px;
+}
+.btn-reset {
+  background: none; border: 1px solid rgba(255,68,102,0.25); color: rgba(255,68,102,0.5);
+  font-family: inherit; font-size: 0.6rem; padding: 4px 10px; border-radius: 5px;
+  cursor: pointer; letter-spacing: 0.1em; transition: all 0.2s;
+}
+.btn-reset:hover { border-color: var(--danger); color: var(--danger); }
 
-  .auth-box label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
+.saving-indicator {
+  font-size: 0.6rem; color: var(--muted); opacity: 0;
+  transition: opacity 0.3s; position: fixed; bottom: 16px; right: 20px; z-index: 10;
+}
+.saving-indicator.visible { opacity: 1; }
 
-  .auth-box input[type="email"] {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: inherit; font-size: 0.85rem;
-    padding: 10px 14px; border-radius: 7px; outline: none; width: 100%;
-    transition: border-color 0.2s;
-  }
-  .auth-box input[type="email"]:focus { border-color: var(--accent2); }
+/* ── Weather ── */
+.weather-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 28px;
+  backdrop-filter: blur(12px);
+  font-size: 0.75rem;
+}
+.weather-icon { font-size: 1.6rem; line-height: 1; }
+.weather-msg { color: var(--text); flex: 1; }
+.weather-msg strong { color: var(--accent); }
+.weather-temp { font-size: 1.1rem; font-weight: 600; color: var(--accent2); white-space: nowrap; }
 
-  .btn-primary {
-    background: rgba(0,255,170,0.1);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    font-family: inherit; font-size: 0.72rem;
-    padding: 10px; border-radius: 7px; cursor: pointer;
-    letter-spacing: 0.1em; transition: background 0.2s;
-  }
-  .btn-primary:hover { background: rgba(0,255,170,0.18); }
-  .btn-primary:disabled { opacity: 0.4; cursor: default; }
+/* ── Calendar ── */
+.calendar-bar {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 18px; margin-bottom: 28px; backdrop-filter: blur(12px);
+}
+.calendar-bar-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.12em; margin-bottom: 10px; }
+.calendar-event {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.75rem;
+}
+.calendar-event:last-child { border-bottom: none; }
+.cal-time { color: var(--accent2); white-space: nowrap; min-width: 90px; }
+.cal-busy { color: var(--muted); font-style: italic; }
+.cal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
+.cal-empty { font-size: 0.68rem; color: var(--muted); }
+#calendarEvents { max-height: 110px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+#calendarEvents::-webkit-scrollbar { width: 3px; }
+#calendarEvents::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  .auth-msg { font-size: 0.65rem; color: var(--danger); text-align: center; min-height: 1em; }
+/* ── Mood ── */
+.mood-bar {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 18px; margin-bottom: 28px; backdrop-filter: blur(12px);
+}
+.mood-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.12em; margin-bottom: 10px; }
+.mood-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.mood-btn {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 14px; cursor: pointer; font-family: inherit; font-size: 0.78rem;
+  color: var(--muted); transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+}
+.mood-btn:hover { border-color: var(--accent2); color: var(--text); }
+.mood-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(0,255,170,0.07); }
+.mood-saved { font-size: 0.62rem; color: var(--muted); margin-top: 8px; min-height: 1em; }
 
-  .btn-google {
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: var(--text);
-    font-family: inherit; font-size: 0.8rem;
-    padding: 12px; border-radius: 8px; cursor: pointer;
-    letter-spacing: 0.04em; transition: background 0.2s, border-color 0.2s;
-    width: 100%;
-  }
-  .btn-google:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
-  .btn-google:disabled { opacity: 0.4; cursor: default; }
+/* ── History ── */
+.history-toggle {
+  background: none; border: none; color: var(--muted); font-family: inherit;
+  font-size: 0.65rem; cursor: pointer; letter-spacing: 0.1em; padding: 0;
+  display: flex; align-items: center; gap: 6px; margin-top: 32px;
+  transition: color 0.2s;
+}
+.history-toggle:hover { color: var(--accent2); }
+.history-panel { margin-top: 14px; display: none; }
+.history-panel.open { display: block; }
+.history-row {
+  display: grid; grid-template-columns: 1fr auto auto auto;
+  gap: 12px; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.7rem;
+}
+.history-row:last-child { border-bottom: none; }
+.history-date { color: var(--muted); }
+.history-mood { font-size: 1rem; }
+.history-pct { color: var(--accent); font-weight: 600; }
+.history-bar-wrap { width: 80px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; }
+.history-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
+.history-empty { font-size: 0.65rem; color: var(--muted); padding: 12px 0; }
 
-  /* ── App ── */
-  .app {
-    position: relative; z-index: 1;
-    width: 100%; max-width: 780px;
-    padding: 32px 20px 60px;
-    display: none;
-  }
+/* ── Metrics ── */
+.metrics-toggle {
+  background: none; border: none; color: var(--muted); font-family: inherit;
+  font-size: 0.65rem; cursor: pointer; letter-spacing: 0.1em; padding: 0;
+  display: flex; align-items: center; gap: 6px; margin-top: 14px;
+  transition: color 0.2s;
+}
+.metrics-toggle:hover { color: var(--accent2); }
+.metrics-panel { margin-top: 14px; display: none; }
+.metrics-panel.open { display: block; }
+.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.metric-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; backdrop-filter: blur(12px);
+}
+.metric-card .mc-label { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 6px; }
+.metric-card .mc-value { font-size: 1.6rem; font-weight: 700; color: var(--accent); line-height: 1; }
+.metric-card .mc-sub { font-size: 0.62rem; color: var(--muted); margin-top: 4px; }
+.mood-chart-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 10px; }
+.mood-chart { display: flex; align-items: flex-end; gap: 4px; height: 60px; }
+.mood-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.mood-col-bar {
+  width: 100%; border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--accent2), var(--accent));
+  transition: height 0.4s ease; min-height: 2px;
+}
+.mood-col-emoji { font-size: 0.7rem; }
+.mood-col-count { font-size: 0.55rem; color: var(--muted); }
+.streak-row { display: flex; gap: 5px; margin-top: 16px; flex-wrap: wrap; }
+.streak-dot {
+  width: 22px; height: 22px; border-radius: 4px; font-size: 0.7rem;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
+}
+.streak-dot.completed { background: rgba(0,255,170,0.15); border-color: var(--accent); }
+.streak-dot.missed { background: rgba(255,68,102,0.08); border-color: rgba(255,68,102,0.2); }
+.streak-dot.empty { opacity: 0.2; }
 
-  header {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    margin-bottom: 36px; flex-wrap: wrap; gap: 16px;
-  }
+/* ── Pending Items ── */
+.pending-section {
+  margin-bottom: 32px;
+}
+.pending-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.pending-header span {
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.pending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pending-card {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  backdrop-filter: blur(12px);
+  transition: border-color 0.25s, opacity 0.25s, transform 0.2s;
+  border-left: 3px solid var(--border);
+  border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.pending-card:hover { transform: translateX(2px); }
+.pending-card.done {
+  opacity: 0.4;
+  border-left-color: var(--muted) !important;
+}
+.pending-card.done .pending-title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.pending-card.urgency-low  { border-left-color: var(--accent); border-color: rgba(0,255,170,0.18); }
+.pending-card.urgency-mid  { border-left-color: var(--warn);   border-color: rgba(255,170,0,0.22); }
+.pending-card.urgency-high { border-left-color: var(--danger); border-color: rgba(255,68,102,0.25); }
+.pending-check {
+  width: 22px; height: 22px;
+  border: 2px solid var(--border); border-radius: 6px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.pending-check:hover { border-color: var(--accent); }
+.pending-check.checked { background: var(--accent); border-color: var(--accent); }
+.pending-check.checked::after { content: '✓'; font-size: 0.7rem; color: #000; font-weight: 700; }
+.pending-body { min-width: 0; }
+.pending-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+  cursor: text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pending-title:focus { border-color: var(--accent2); color: #fff; }
+.pending-due {
+  font-size: 0.62rem;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pending-due input[type="date"] {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--accent2);
+  font-family: inherit;
+  font-size: 0.62rem;
+  outline: none;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.pending-due input[type="date"]:focus { border-color: var(--accent2); }
+.pending-days {
+  font-size: 0.62rem;
+  white-space: nowrap;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.urgency-low  .pending-days { color: var(--accent);  background: rgba(0,255,170,0.08); }
+.urgency-mid  .pending-days { color: var(--warn);    background: rgba(255,170,0,0.1);  }
+.urgency-high .pending-days { color: var(--danger);  background: rgba(255,68,102,0.1); }
+.pending-card.done .pending-days { display: none; }
+.btn-del-pending {
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 1rem; padding: 0 2px;
+  line-height: 1; transition: color 0.2s; opacity: 0;
+}
+.pending-card:hover .btn-del-pending { opacity: 1; }
+.btn-del-pending:hover { color: var(--danger); }
 
-  .header-left h1 { font-size: 1.1rem; font-weight: 400; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
-  .header-left .date { font-size: 0.72rem; color: var(--muted); margin-top: 4px; opacity: 0.6; }
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  pointer-events: none; z-index: 2;
+}
 
-  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-
-  .countdown-block { text-align: right; }
-  .countdown-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; }
-  .countdown-time { font-size: 2.8rem; font-weight: 700; letter-spacing: 0.04em; line-height: 1; transition: color 0.4s; }
-  .countdown-time.on-time { color: var(--accent); text-shadow: 0 0 20px rgba(0,255,170,0.4); }
-  .countdown-time.warning  { color: var(--warn);   text-shadow: 0 0 20px rgba(255,170,0,0.4); }
-  .countdown-time.late     { color: var(--danger);  text-shadow: 0 0 20px rgba(255,68,102,0.4); }
-
-  .start-config {
-    font-size: 0.62rem; color: var(--muted);
-    display: flex; align-items: center; justify-content: flex-end; gap: 6px;
-  }
-  .start-config input[type="time"] {
-    background: transparent; border: 1px solid var(--border);
-    color: var(--accent2); font-family: inherit; font-size: 0.62rem;
-    padding: 2px 6px; border-radius: 4px; outline: none; cursor: pointer;
-  }
-  .start-config input[type="time"]:focus { border-color: var(--accent2); }
-
-  .btn-signout {
-    background: none; border: 1px solid rgba(255,255,255,0.08);
-    color: var(--muted); font-family: inherit; font-size: 0.58rem;
-    padding: 3px 9px; border-radius: 5px; cursor: pointer;
-    letter-spacing: 0.08em; transition: all 0.2s;
-  }
-  .btn-signout:hover { border-color: var(--danger); color: var(--danger); }
-
-  .progress-wrap { margin-bottom: 28px; }
-  .progress-meta { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.08em; }
-  .progress-bar-bg { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
-  .progress-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.5s ease; box-shadow: 0 0 8px rgba(0,255,170,0.5); }
-
-  .tasks-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-  .tasks-header span { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; }
-
-  .btn-add {
-    background: none; border: 1px solid var(--border); color: var(--accent);
-    font-family: inherit; font-size: 0.65rem; padding: 5px 12px;
-    border-radius: 6px; cursor: pointer; letter-spacing: 0.1em; transition: background 0.2s, border-color 0.2s;
-  }
-  .btn-add:hover { background: rgba(0,255,170,0.07); border-color: var(--accent); }
-
-  .task-list { display: flex; flex-direction: column; gap: 10px; }
-
-  .task-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px 16px; display: grid; grid-template-columns: 28px 1fr auto auto;
-    align-items: center; gap: 12px; backdrop-filter: blur(12px);
-    transition: border-color 0.25s, opacity 0.25s, transform 0.2s;
-  }
-  .task-card:hover { border-color: rgba(0,255,170,0.3); transform: translateX(2px); }
-  .task-card.done { opacity: 0.5; border-color: rgba(0,255,170,0.1); }
-  .task-card.done .task-name { text-decoration: line-through; color: var(--muted); }
-
-  .task-check {
-    width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: background 0.2s, border-color 0.2s; flex-shrink: 0;
-  }
-  .task-check:hover { border-color: var(--accent); }
-  .task-check.checked { background: var(--accent); border-color: var(--accent); }
-  .task-check.checked::after { content: '✓'; font-size: 0.7rem; color: #000; font-weight: 700; }
-
-  .task-body { min-width: 0; }
-  .task-name {
-    font-size: 0.88rem; font-weight: 500; color: var(--text);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    outline: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; cursor: text;
-  }
-  .task-name:focus { border-color: var(--accent2); color: #fff; }
-
-  .task-duration { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
-  .task-duration input {
-    background: transparent; border: none; border-bottom: 1px solid var(--border);
-    color: var(--accent2); font-family: inherit; font-size: 0.65rem;
-    width: 32px; text-align: center; outline: none; padding: 0 2px;
-  }
-  .task-duration input:focus { border-color: var(--accent2); }
-  .task-duration span { font-size: 0.62rem; color: var(--muted); }
-
-  .task-time-slot { font-size: 0.65rem; color: var(--muted); white-space: nowrap; text-align: right; }
-
-  .btn-del {
-    background: none; border: none; color: var(--muted); cursor: pointer;
-    font-size: 1rem; padding: 0 2px; line-height: 1; transition: color 0.2s; opacity: 0;
-  }
-  .task-card:hover .btn-del { opacity: 1; }
-  .btn-del:hover { color: var(--danger); }
-
-  .footer-info {
-    margin-top: 32px; display: flex; justify-content: space-between; align-items: center;
-    font-size: 0.62rem; color: var(--muted); letter-spacing: 0.08em; flex-wrap: wrap; gap: 8px;
-  }
-  .btn-reset {
-    background: none; border: 1px solid rgba(255,68,102,0.25); color: rgba(255,68,102,0.5);
-    font-family: inherit; font-size: 0.6rem; padding: 4px 10px; border-radius: 5px;
-    cursor: pointer; letter-spacing: 0.1em; transition: all 0.2s;
-  }
-  .btn-reset:hover { border-color: var(--danger); color: var(--danger); }
-
-  .saving-indicator {
-    font-size: 0.6rem; color: var(--muted); opacity: 0;
-    transition: opacity 0.3s; position: fixed; bottom: 16px; right: 20px; z-index: 10;
-  }
-  .saving-indicator.visible { opacity: 1; }
-
-  /* ── Weather ── */
-  .weather-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 18px;
-    display: flex; align-items: center; gap: 14px;
-    margin-bottom: 28px;
-    backdrop-filter: blur(12px);
-    font-size: 0.75rem;
-  }
-  .weather-icon { font-size: 1.6rem; line-height: 1; }
-  .weather-msg  { color: var(--text); flex: 1; }
-  .weather-msg strong { color: var(--accent); }
-  .weather-temp { font-size: 1.1rem; font-weight: 600; color: var(--accent2); white-space: nowrap; }
-
-  /* ── Calendar ── */
-  .calendar-bar {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px 18px; margin-bottom: 28px; backdrop-filter: blur(12px);
-  }
-  .calendar-bar-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.12em; margin-bottom: 10px; }
-  .calendar-event {
-    display: flex; align-items: center; gap: 10px;
-    padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.75rem;
-  }
-  .calendar-event:last-child { border-bottom: none; }
-  .cal-time { color: var(--accent2); white-space: nowrap; min-width: 90px; }
-  .cal-busy { color: var(--muted); font-style: italic; }
-  .cal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
-  .cal-empty { font-size: 0.68rem; color: var(--muted); }
-  #calendarEvents { max-height: 110px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-  #calendarEvents::-webkit-scrollbar { width: 3px; }
-  #calendarEvents::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  /* ── Mood ── */
-  .mood-bar {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px 18px; margin-bottom: 28px; backdrop-filter: blur(12px);
-  }
-  .mood-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.12em; margin-bottom: 10px; }
-  .mood-options { display: flex; gap: 8px; flex-wrap: wrap; }
-  .mood-btn {
-    background: none; border: 1px solid var(--border); border-radius: 8px;
-    padding: 7px 14px; cursor: pointer; font-family: inherit; font-size: 0.78rem;
-    color: var(--muted); transition: all 0.2s; display: flex; align-items: center; gap: 6px;
-  }
-  .mood-btn:hover { border-color: var(--accent2); color: var(--text); }
-  .mood-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(0,255,170,0.07); }
-  .mood-saved { font-size: 0.62rem; color: var(--muted); margin-top: 8px; min-height: 1em; }
-
-  /* ── History ── */
-  .history-toggle {
-    background: none; border: none; color: var(--muted); font-family: inherit;
-    font-size: 0.65rem; cursor: pointer; letter-spacing: 0.1em; padding: 0;
-    display: flex; align-items: center; gap: 6px; margin-top: 32px;
-    transition: color 0.2s;
-  }
-  .history-toggle:hover { color: var(--accent2); }
-  .history-panel { margin-top: 14px; display: none; }
-  .history-panel.open { display: block; }
-  .history-row {
-    display: grid; grid-template-columns: 1fr auto auto auto;
-    gap: 12px; align-items: center;
-    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
-    font-size: 0.7rem;
-  }
-  .history-row:last-child { border-bottom: none; }
-  .history-date { color: var(--muted); }
-  .history-mood { font-size: 1rem; }
-  .history-pct { color: var(--accent); font-weight: 600; }
-  .history-bar-wrap { width: 80px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; }
-  .history-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
-  .history-empty { font-size: 0.65rem; color: var(--muted); padding: 12px 0; }
-
-  /* ── Metrics ── */
-  .metrics-toggle {
-    background: none; border: none; color: var(--muted); font-family: inherit;
-    font-size: 0.65rem; cursor: pointer; letter-spacing: 0.1em; padding: 0;
-    display: flex; align-items: center; gap: 6px; margin-top: 14px;
-    transition: color 0.2s;
-  }
-  .metrics-toggle:hover { color: var(--accent2); }
-  .metrics-panel { margin-top: 14px; display: none; }
-  .metrics-panel.open { display: block; }
-
-  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-  .metric-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px 16px; backdrop-filter: blur(12px);
-  }
-  .metric-card .mc-label { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 6px; }
-  .metric-card .mc-value { font-size: 1.6rem; font-weight: 700; color: var(--accent); line-height: 1; }
-  .metric-card .mc-sub   { font-size: 0.62rem; color: var(--muted); margin-top: 4px; }
-
-  .mood-chart-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 10px; }
-  .mood-chart { display: flex; align-items: flex-end; gap: 4px; height: 60px; }
-  .mood-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
-  .mood-col-bar {
-    width: 100%; border-radius: 3px 3px 0 0;
-    background: linear-gradient(180deg, var(--accent2), var(--accent));
-    transition: height 0.4s ease; min-height: 2px;
-  }
-  .mood-col-emoji { font-size: 0.7rem; }
-  .mood-col-count { font-size: 0.55rem; color: var(--muted); }
-
-  .streak-row { display: flex; gap: 5px; margin-top: 16px; flex-wrap: wrap; }
-  .streak-dot {
-    width: 22px; height: 22px; border-radius: 4px; font-size: 0.7rem;
-    display: flex; align-items: center; justify-content: center;
-    border: 1px solid var(--border);
-  }
-  .streak-dot.completed { background: rgba(0,255,170,0.15); border-color: var(--accent); }
-  .streak-dot.missed    { background: rgba(255,68,102,0.08); border-color: rgba(255,68,102,0.2); }
-  .streak-dot.empty     { opacity: 0.2; }
-
-  body::after {
-    content: ''; position: fixed; inset: 0;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
-    pointer-events: none; z-index: 2;
-  }
-
-  @media (max-width: 500px) {
-    .countdown-time { font-size: 2rem; }
-    .task-card { grid-template-columns: 28px 1fr auto; }
-    .task-time-slot { display: none; }
-  }
+@media (max-width: 500px) {
+  .countdown-time { font-size: 2rem; }
+  .task-card { grid-template-columns: 28px 1fr auto; }
+  .task-time-slot { display: none; }
+  .pending-card { grid-template-columns: 28px 1fr auto; }
+}
 </style>
 </head>
 <body>
-
 <canvas id="particles"></canvas>
 
 <!-- Auth -->
@@ -406,6 +491,17 @@
     <div class="weather-temp" id="weatherTemp"></div>
   </div>
 
+  <!-- Pending Items — NUEVA SECCIÓN -->
+  <div class="pending-section">
+    <div class="pending-header">
+      <span>// pendientes</span>
+      <button class="btn-add" onclick="addPending()">+ agregar</button>
+    </div>
+    <div class="pending-list" id="pendingList">
+      <div style="font-size:0.65rem;color:var(--muted);padding:8px 0">cargando...</div>
+    </div>
+  </div>
+
   <!-- Mood check-in -->
   <div class="mood-bar" id="moodBar">
     <div class="mood-label">// ¿CÓMO TE SIENTES HOY?</div>
@@ -424,7 +520,6 @@
     <span>// tareas</span>
     <button class="btn-add" onclick="addTask()">+ nueva tarea</button>
   </div>
-
   <div class="task-list" id="taskList"></div>
 
   <div class="footer-info">
@@ -461,11 +556,12 @@ const DEFAULT_TASKS = [
   { name: 'Arreglarme',         duration: 20, done: false, position: 4 },
 ]
 
-let tasks = []
-let startTime = localStorage.getItem('mr_startTime') || '05:30'
-let saveTimer = null
+let tasks      = []
+let startTime  = localStorage.getItem('mr_startTime') || '05:30'
+let saveTimer  = null
 
-// ── Auth ────────────────────────────────────────────────────────────────────
+// ── Auth ─────────────────────────────────────────────────────────────────────
+
 async function init() {
   const { data: { session } } = await sb.auth.getSession()
   if (session) showApp()
@@ -506,10 +602,11 @@ document.getElementById('btnSignOut').addEventListener('click', async () => {
   await sb.auth.signOut()
 })
 
-// ── App ─────────────────────────────────────────────────────────────────────
+// ── App ──────────────────────────────────────────────────────────────────────
+
 async function showApp() {
   document.getElementById('authScreen').style.display = 'none'
-  document.getElementById('appScreen').style.display = 'block'
+  document.getElementById('appScreen').style.display  = 'block'
   document.getElementById('startTime').value = startTime
   await loadTasks()
   render()
@@ -518,6 +615,7 @@ async function showApp() {
   fetchWeather()
   loadMood()
   fetchCalendar()
+  loadPending()   // ← NUEVO
 }
 
 async function fetchCalendar() {
@@ -527,27 +625,23 @@ async function fetchCalendar() {
       document.getElementById('calendarEvents').innerHTML = '<span class="cal-empty">reconecta con Google para ver tu agenda</span>'
       return
     }
-
     const now   = new Date()
     const start = new Date(now); start.setHours(0,0,0,0)
     const end   = new Date(now); end.setHours(23,59,59,999)
     const calId = encodeURIComponent('cim.ramirez@etribe.mx')
     const url   = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?timeMin=${start.toISOString()}&timeMax=${end.toISOString()}&singleEvents=true&orderBy=startTime&fields=items(start,end)`
-
-    const res  = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    const res   = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
     if (res.status === 401) {
       localStorage.removeItem('mr_gtoken')
       document.getElementById('calendarEvents').innerHTML = '<span class="cal-empty">sesión expirada — reconecta con Google</span>'
       return
     }
     const data = await res.json()
-
-    const el = document.getElementById('calendarEvents')
+    const el   = document.getElementById('calendarEvents')
     if (!data.items || data.items.length === 0) {
       el.innerHTML = '<span class="cal-empty">✓ sin eventos hoy</span>'
       return
     }
-
     el.innerHTML = data.items.map(ev => {
       const s = ev.start.dateTime ? new Date(ev.start.dateTime) : null
       const e = ev.end.dateTime   ? new Date(ev.end.dateTime)   : null
@@ -566,12 +660,11 @@ async function fetchCalendar() {
 
 async function fetchWeather() {
   try {
-    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=19.4326&longitude=-99.1332&current=temperature_2m,precipitation_probability,weathercode&timezone=America%2FMexico_City')
-    const d = await res.json()
-    const temp  = Math.round(d.current.temperature_2m)
-    const rain  = d.current.precipitation_probability
-    const code  = d.current.weathercode
-
+    const res  = await fetch('https://api.open-meteo.com/v1/forecast?latitude=19.4326&longitude=-99.1332&current=temperature_2m,precipitation_probability,weathercode&timezone=America%2FMexico_City')
+    const d    = await res.json()
+    const temp = Math.round(d.current.temperature_2m)
+    const rain = d.current.precipitation_probability
+    const code = d.current.weathercode
     let icon, msg
     if (rain >= 60 || [61,63,65,80,81,82].includes(code)) {
       icon = '🌧️'; msg = `<strong>Lleva paraguas</strong> — se pronostican lluvias (${rain}% prob.)`
@@ -584,10 +677,9 @@ async function fetchWeather() {
     } else {
       icon = '🌤️'; msg = `Buen día para salir — sin lluvia esperada`
     }
-
-    document.getElementById('weatherIcon').textContent = icon
-    document.getElementById('weatherMsg').innerHTML = msg
-    document.getElementById('weatherTemp').textContent = `${temp}°C`
+    document.getElementById('weatherIcon').textContent  = icon
+    document.getElementById('weatherMsg').innerHTML     = msg
+    document.getElementById('weatherTemp').textContent  = `${temp}°C`
   } catch {
     document.getElementById('weatherMsg').textContent = 'pronóstico no disponible'
   }
@@ -595,7 +687,7 @@ async function fetchWeather() {
 
 function showAuth() {
   document.getElementById('authScreen').style.display = 'flex'
-  document.getElementById('appScreen').style.display = 'none'
+  document.getElementById('appScreen').style.display  = 'none'
 }
 
 async function loadTasks() {
@@ -612,7 +704,8 @@ async function loadTasks() {
   }
 }
 
-// ── Render ──────────────────────────────────────────────────────────────────
+// ── Render ───────────────────────────────────────────────────────────────────
+
 function render() {
   const list = document.getElementById('taskList')
   list.innerHTML = ''
@@ -660,10 +753,11 @@ function updateTotalInfo(endMin, startMin) {
   const eHH = String(Math.floor(endMin / 60)).padStart(2, '0')
   const eMM = String(endMin % 60).padStart(2, '0')
   document.getElementById('totalTimeInfo').textContent =
-    `total: ${endMin - startMin} min  ·  fin estimado: ${eHH}:${eMM}`
+    `total: ${endMin - startMin} min · fin estimado: ${eHH}:${eMM}`
 }
 
-// ── Supabase writes (debounced) ──────────────────────────────────────────────
+// ── Supabase writes (debounced) ───────────────────────────────────────────────
+
 function flashSaving() {
   const el = document.getElementById('savingIndicator')
   el.classList.add('visible')
@@ -684,14 +778,14 @@ async function deleteTask(id) {
 async function insertTask(task) {
   flashSaving()
   const { data: { user }, error: userError } = await sb.auth.getUser()
-  console.log('insertTask user:', user, userError)
   if (!user) return null
   const { data, error } = await sb.from('tasks').insert({ ...task, user_id: user.id }).select().single()
   if (error) console.error('insert error:', error)
   return data
 }
 
-// ── Events ───────────────────────────────────────────────────────────────────
+// ── Events ────────────────────────────────────────────────────────────────────
+
 document.getElementById('taskList').addEventListener('click', async e => {
   const check = e.target.closest('.task-check')
   const del   = e.target.closest('.btn-del')
@@ -715,6 +809,7 @@ document.getElementById('taskList').addEventListener('click', async e => {
 })
 
 let nameDebounce = {}
+
 document.getElementById('taskList').addEventListener('input', async e => {
   const nameEl = e.target.closest('.task-name')
   const durEl  = e.target.closest('input[type="number"]')
@@ -746,11 +841,12 @@ document.getElementById('startTime').addEventListener('change', e => {
   render()
 })
 
-// ── Add / Reset ──────────────────────────────────────────────────────────────
+// ── Add / Reset ───────────────────────────────────────────────────────────────
+
 window.addTask = async function() {
   try {
     const position = tasks.length
-    const newTask = await insertTask({ name: 'Nueva tarea', duration: 15, done: false, position })
+    const newTask  = await insertTask({ name: 'Nueva tarea', duration: 15, done: false, position })
     if (!newTask) { console.error('insertTask returned null'); return }
     tasks.push(newTask)
     render()
@@ -770,7 +866,8 @@ window.resetDay = async function() {
   await Promise.all(tasks.map(t => sb.from('tasks').update({ done: false }).eq('id', t.id)))
 }
 
-// ── Mood ─────────────────────────────────────────────────────────────────────
+// ── Mood ──────────────────────────────────────────────────────────────────────
+
 async function logDay(fields) {
   const today = new Date().toISOString().slice(0, 10)
   const { data: { user } } = await sb.auth.getUser()
@@ -784,7 +881,7 @@ async function logDay(fields) {
 }
 
 async function loadMood() {
-  const today = new Date().toISOString().slice(0, 10)
+  const today  = new Date().toISOString().slice(0, 10)
   const { data } = await sb.from('daily_log').select('mood').eq('date', today).maybeSingle()
   if (data?.mood) applyMoodUI(data.mood)
 }
@@ -811,12 +908,14 @@ document.querySelectorAll('.mood-btn').forEach(btn => {
 })
 
 // ── History ───────────────────────────────────────────────────────────────────
+
 window.toggleHistory = async function() {
   const panel = document.getElementById('historyPanel')
   const arrow = document.getElementById('historyArrow')
   const isOpen = panel.classList.toggle('open')
   arrow.textContent = isOpen ? '▼' : '▶'
   if (!isOpen) return
+
   const { data } = await sb.from('daily_log').select('*').order('date', { ascending: false }).limit(30)
   if (!data || data.length === 0) {
     panel.innerHTML = '<div class="history-empty">aún no hay registros</div>'
@@ -836,8 +935,8 @@ window.toggleHistory = async function() {
 }
 
 window.toggleMetrics = async function() {
-  const panel = document.getElementById('metricsPanel')
-  const arrow = document.getElementById('metricsArrow')
+  const panel  = document.getElementById('metricsPanel')
+  const arrow  = document.getElementById('metricsArrow')
   const isOpen = panel.classList.toggle('open')
   arrow.textContent = isOpen ? '▼' : '▶'
   if (!isOpen) return
@@ -848,23 +947,20 @@ window.toggleMetrics = async function() {
     return
   }
 
-  // ── Summary cards ──
-  const total    = data.length
-  const avgPct   = Math.round(data.reduce((s, r) => s + (r.tasks_total ? r.tasks_done / r.tasks_total * 100 : 0), 0) / total)
-  const perfect  = data.filter(r => r.tasks_total && r.tasks_done === r.tasks_total).length
+  const total   = data.length
+  const avgPct  = Math.round(data.reduce((s, r) => s + (r.tasks_total ? r.tasks_done / r.tasks_total * 100 : 0), 0) / total)
+  const perfect = data.filter(r => r.tasks_total && r.tasks_done === r.tasks_total).length
   const moodCount = {}
   data.forEach(r => { if (r.mood) moodCount[r.mood] = (moodCount[r.mood] || 0) + 1 })
-  const topMood  = Object.entries(moodCount).sort((a,b) => b[1]-a[1])[0]
+  const topMood = Object.entries(moodCount).sort((a,b) => b[1]-a[1])[0]
 
-  // streak (consecutive days with at least 1 task done)
   let streak = 0
   const sorted = [...data].sort((a,b) => b.date.localeCompare(a.date))
   for (const r of sorted) {
     if (r.tasks_done > 0) streak++; else break
   }
 
-  // ── Last 30 days dot grid ──
-  const last30 = Array.from({ length: 30 }, (_, i) => {
+  const last30  = Array.from({ length: 30 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (29 - i))
     return d.toISOString().slice(0, 10)
   })
@@ -893,7 +989,6 @@ window.toggleMetrics = async function() {
         <div class="mc-sub">${topMood ? `${topMood[1]} de ${total} días` : 'sin datos'}</div>
       </div>
     </div>
-
     <div class="mood-chart-label">// DISTRIBUCIÓN EMOCIONAL</div>
     <div class="mood-chart">
       ${['😴','😟','😢','😐','🙂','⚡'].map(e => {
@@ -907,7 +1002,6 @@ window.toggleMetrics = async function() {
         </div>`
       }).join('')}
     </div>
-
     <div class="mood-chart-label" style="margin-top:20px">// ÚLTIMOS 30 DÍAS</div>
     <div class="streak-row">
       ${last30.map(date => {
@@ -921,7 +1015,156 @@ window.toggleMetrics = async function() {
   `
 }
 
-// ── Countdown ────────────────────────────────────────────────────────────────
+// ── Pending Items ─────────────────────────────────────────────────────────────
+
+let pendingItems   = []
+let pendingDebounce = {}
+
+function getDaysLeft(dueDateStr) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const due = new Date(dueDateStr + 'T00:00:00')
+  return Math.ceil((due - today) / (1000 * 60 * 60 * 24))
+}
+
+function urgencyClass(days, done) {
+  if (done)      return ''
+  if (days <= 3) return 'urgency-high'
+  if (days <= 7) return 'urgency-mid'
+  return 'urgency-low'
+}
+
+function daysLabel(days) {
+  if (days < 0)   return `venció hace ${Math.abs(days)} día${Math.abs(days) !== 1 ? 's' : ''}`
+  if (days === 0) return '¡vence hoy!'
+  if (days === 1) return 'vence mañana'
+  return `${days} días`
+}
+
+async function loadPending() {
+  const { data, error } = await sb.from('pending_items')
+    .select('*')
+    .order('due_date')
+  if (error) { console.error(error); return }
+  pendingItems = data || []
+  renderPending()
+}
+
+function renderPending() {
+  // Primero no completados (por fecha), luego completados
+  const sorted = [...pendingItems].sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1
+    return a.due_date.localeCompare(b.due_date)
+  })
+
+  const list = document.getElementById('pendingList')
+  list.innerHTML = ''
+
+  if (sorted.length === 0) {
+    list.innerHTML = '<div style="font-size:0.65rem;color:var(--muted);padding:8px 0">sin pendientes — ¡todo en orden! ✓</div>'
+    return
+  }
+
+  sorted.forEach(item => {
+    const days = getDaysLeft(item.due_date)
+    const urg  = urgencyClass(days, item.done)
+
+    const card = document.createElement('div')
+    card.className = `pending-card ${urg} ${item.done ? 'done' : ''}`
+    card.innerHTML = `
+      <div class="pending-check ${item.done ? 'checked' : ''}" data-pid="${item.id}"></div>
+      <div class="pending-body">
+        <div class="pending-title" contenteditable="true" spellcheck="false" data-pid="${item.id}">${item.title}</div>
+        <div class="pending-due">
+          <input type="date" value="${item.due_date}" data-pid="${item.id}">
+          <span class="pending-days">${daysLabel(days)}</span>
+        </div>
+      </div>
+      <div></div>
+      <button class="btn-del-pending" data-pid="${item.id}">×</button>
+    `
+    list.appendChild(card)
+  })
+}
+
+document.getElementById('pendingList').addEventListener('click', async e => {
+  const check = e.target.closest('.pending-check')
+  const del   = e.target.closest('.btn-del-pending')
+
+  if (check) {
+    const id   = check.dataset.pid
+    const item = pendingItems.find(p => p.id === id)
+    if (!item) return
+    item.done = !item.done
+    renderPending()
+    flashSaving()
+    await sb.from('pending_items').update({ done: item.done }).eq('id', id)
+  }
+
+  if (del) {
+    const id = del.dataset.pid
+    pendingItems = pendingItems.filter(p => p.id !== id)
+    renderPending()
+    flashSaving()
+    await sb.from('pending_items').delete().eq('id', id)
+  }
+})
+
+document.getElementById('pendingList').addEventListener('input', async e => {
+  const titleEl = e.target.closest('.pending-title')
+  const dateEl  = e.target.closest('input[type="date"]')
+
+  if (titleEl) {
+    const id   = titleEl.dataset.pid
+    const item = pendingItems.find(p => p.id === id)
+    if (!item) return
+    item.title = titleEl.textContent.trim()
+    clearTimeout(pendingDebounce['t_' + id])
+    pendingDebounce['t_' + id] = setTimeout(async () => {
+      flashSaving()
+      await sb.from('pending_items').update({ title: item.title }).eq('id', id)
+    }, 700)
+  }
+
+  if (dateEl) {
+    const id   = dateEl.dataset.pid
+    const item = pendingItems.find(p => p.id === id)
+    if (!item) return
+    item.due_date = dateEl.value
+    renderPending()
+    flashSaving()
+    await sb.from('pending_items').update({ due_date: item.due_date }).eq('id', id)
+  }
+})
+
+window.addPending = async function() {
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return
+
+  // Fecha por defecto: 7 días desde hoy
+  const due = new Date()
+  due.setDate(due.getDate() + 7)
+  const dueStr = due.toISOString().slice(0, 10)
+
+  const { data, error } = await sb.from('pending_items')
+    .insert({ user_id: user.id, title: 'Nuevo pendiente', due_date: dueStr, done: false })
+    .select()
+    .single()
+
+  if (error) { console.error(error); return }
+
+  pendingItems.push(data)
+  renderPending()
+
+  setTimeout(() => {
+    const titles = document.querySelectorAll('.pending-title')
+    const match  = [...titles].find(el => el.dataset.pid === data.id)
+    if (match) { match.focus(); document.execCommand('selectAll', false, null) }
+  }, 50)
+}
+
+// ── Countdown ─────────────────────────────────────────────────────────────────
+
 function updateCountdown() {
   const now    = new Date()
   const target = new Date(now)
@@ -932,20 +1175,21 @@ function updateCountdown() {
   const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0')
   const s = String(diff % 60).padStart(2, '0')
   const el = document.getElementById('countdown')
-  el.textContent = `${h}:${m}:${s}`
-  el.className = 'countdown-time ' + (diff > 3600 ? 'on-time' : diff > 900 ? 'warning' : 'late')
+  el.textContent  = `${h}:${m}:${s}`
+  el.className    = 'countdown-time ' + (diff > 3600 ? 'on-time' : diff > 900 ? 'warning' : 'late')
   document.getElementById('dateLabel').textContent =
     now.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
-// ── Particles ────────────────────────────────────────────────────────────────
+// ── Particles ─────────────────────────────────────────────────────────────────
+
 ;(function() {
   const canvas = document.getElementById('particles')
   const ctx    = canvas.getContext('2d')
   let W, H, pts
-  const N = 90
+  const N      = 90
   const resize = () => { W = canvas.width = innerWidth; H = canvas.height = innerHeight }
-  const mkPt = () => ({ x: Math.random()*W, y: Math.random()*H, vx: (Math.random()-.5)*.35, vy: (Math.random()-.5)*.35, r: Math.random()*1.4+.4, a: Math.random()*.5+.1 })
+  const mkPt   = () => ({ x: Math.random()*W, y: Math.random()*H, vx: (Math.random()-.5)*.35, vy: (Math.random()-.5)*.35, r: Math.random()*1.4+.4, a: Math.random()*.5+.1 })
   const initPts = () => { pts = Array.from({length:N}, mkPt) }
   function drawPts() {
     ctx.clearRect(0,0,W,H)
