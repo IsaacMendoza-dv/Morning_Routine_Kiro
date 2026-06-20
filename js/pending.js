@@ -1,6 +1,6 @@
 // ── pending.js — pendientes a mediano plazo ───────────────────────────────────
 
-let pendingItems     = []
+window.pendingItems = []
 let _pendingDebounce = {}
 
 // ── Helpers de fecha ──────────────────────────────────────────────────────────
@@ -170,7 +170,7 @@ function renderPending() {
     delBtn.textContent = '×'
     delBtn.addEventListener('click', (e) => {
       e.stopPropagation()
-      pendingItems = pendingItems.filter(p => p.id !== item.id)
+      window.pendingItems = window.pendingItems.filter(p => p.id !== item.id)
       card.remove()
       flashSaving()
       sb.from('pending_items').delete().eq('id', item.id)
@@ -226,3 +226,8 @@ window.addPending = async function () {
     })
   }, 50)
 }
+// Exponer para acceso global
+Object.defineProperty(window, 'pendingItems', {
+  get: () => pendingItems,
+  set: (v) => { pendingItems = v }
+})
