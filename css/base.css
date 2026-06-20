@@ -61,3 +61,8 @@ body::after {
   z-index: 10;
 }
 .saving-indicator.visible { opacity: 1; }
+
+#pendingList, .pending-card, .pending-check {
+  position: relative;
+  z-index: 10;
+}
