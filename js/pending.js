@@ -105,6 +105,7 @@ function renderPending() {
     const titleEl = document.createElement('div')
     titleEl.className = 'pending-title'
     titleEl.contentEditable = 'false'
+    titleEl.tabIndex = -1
     titleEl.spellcheck = false
     titleEl.textContent = item.title
     titleEl.style.pointerEvents = 'auto'

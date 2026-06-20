@@ -111,3 +111,20 @@
   -webkit-user-select: none;
   user-select: none;
 }
+
+.pending-title[contenteditable="false"] {
+  outline: none;
+  cursor: default;
+  caret-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+.pending-title[contenteditable="true"] {
+  cursor: text;
+  caret-color: var(--accent2);
+  user-select: text;
+  -webkit-user-select: text;
+  pointer-events: auto;
+}
