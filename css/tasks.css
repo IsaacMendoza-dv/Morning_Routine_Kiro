@@ -64,11 +64,11 @@
 }
 
 /* Hides standard increment/decrement arrows on duration inputs */
-.task-duration input::-webkit-outer-spin-button,
-.task-duration input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
 }
-.task-duration input[type="number"] {
-  -moz-appearance: textfield;
+input[type="number"] {
+  -moz-appearance: textfield !important;
 }
