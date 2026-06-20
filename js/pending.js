@@ -76,7 +76,7 @@ function renderPending() {
     const check = document.createElement('div')
     check.className = `pending-check ${item.done ? 'checked' : ''}`
     check.dataset.pid = item.id
-    check.addEventListener('click', (e) => {
+    check.onclick = (e) => {
       e.stopPropagation()
       const id   = check.dataset.pid
       const itm  = pendingItems.find(p => p.id === id)
@@ -97,7 +97,7 @@ function renderPending() {
       // Guardar en Supabase
       flashSaving()
       sb.from('pending_items').update({ done: itm.done }).eq('id', id)
-    })
+    }
 
     // ── Body ──
     const body = document.createElement('div')
