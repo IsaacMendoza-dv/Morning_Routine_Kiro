@@ -22,6 +22,17 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Permitir selección y edición de texto en elementos editables e inputs */
+[contenteditable="true"], 
+input, 
+textarea,
+.task-name {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* scanlines overlay */

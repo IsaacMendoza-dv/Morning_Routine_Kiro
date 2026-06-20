@@ -105,6 +105,13 @@ document.getElementById('taskList').addEventListener('click', async e => {
   const check = e.target.closest('.task-check')
   const del   = e.target.closest('.btn-del')
 
+  if (check || del) {
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
+    window.getSelection()?.removeAllRanges();
+  }
+
   if (check) {
     const id = check.dataset.id
     const t  = tasks.find(t => t.id === id)
@@ -169,6 +176,8 @@ window.addTask = async function () {
 
 window.resetDay = async function () {
   if (!confirm('¿Reiniciar el progreso del día?')) return
+  if (document.activeElement) document.activeElement.blur()
+  window.getSelection()?.removeAllRanges()
   tasks.forEach(t => t.done = false)
   render()
   flashSaving()
