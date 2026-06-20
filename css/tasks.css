@@ -62,3 +62,13 @@
   .task-card      { grid-template-columns: 28px 1fr auto; }
   .task-time-slot { display: none; }
 }
+
+/* Hides standard increment/decrement arrows on duration inputs */
+.task-duration input::-webkit-outer-spin-button,
+.task-duration input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.task-duration input[type="number"] {
+  -moz-appearance: textfield;
+}
