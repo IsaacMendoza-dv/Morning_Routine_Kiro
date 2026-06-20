@@ -106,3 +106,8 @@
 .pending-title:focus {
   pointer-events: auto;
 }
+
+.pending-check {
+  -webkit-user-select: none;
+  user-select: none;
+}

@@ -75,6 +75,7 @@ function renderPending() {
     check.className = 'pending-check' + (item.done ? ' checked' : '')
 
     check.onclick = function() {
+    if (document.activeElement) document.activeElement.blur()
       var found = null
       for (var i = 0; i < window.pendingItems.length; i++) {
         if (String(window.pendingItems[i].id) === String(item.id)) {
