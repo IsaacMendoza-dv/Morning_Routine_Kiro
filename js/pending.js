@@ -106,7 +106,14 @@ function renderPending() {
     // Título editable
     const titleEl = document.createElement('div')
     titleEl.className       = 'pending-title'
-    titleEl.contentEditable = 'true'
+    titleEl.contentEditable = 'false'
+    titleEl.addEventListener('dblclick', function() {
+      titleEl.contentEditable = 'true'
+      titleEl.focus()
+    })
+    titleEl.addEventListener('blur', function() {
+      titleEl.contentEditable = 'false'
+    })
     titleEl.spellcheck      = false
     titleEl.textContent     = item.title
     titleEl.addEventListener('input', () => {
