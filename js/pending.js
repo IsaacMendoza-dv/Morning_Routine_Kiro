@@ -147,30 +147,22 @@ function renderPending() {
     const dueRow = document.createElement('div')
     dueRow.className = 'pending-due'
 
-    const dateInput = document.createElement('input')
-    dateInput.type  = 'date'
-    dateInput.value = item.due_date
-    dateInput.style.cssText = 'position:absolute;opacity:0;width:0;height:0;pointer-events:none;'
-    dateInput.addEventListener('change', async function() {
-      if (!dateInput.value) return
-      item.due_date = dateInput.value
-      dateLabel.textContent = formatDateDisplay(item.due_date)
-      var newDays = getDaysLeft(item.due_date)
-      daysSpan.textContent = daysLabel(newDays)
-      card.classList.remove('urgency-low', 'urgency-mid', 'urgency-high')
-      if (!item.done) card.classList.add(urgencyClass(newDays, false))
-      flashSaving()
-      await sb.from('pending_items').update({ due_date: item.due_date }).eq('id', item.id)
-    })
-
     const dateLabel = document.createElement('span')
     dateLabel.className = 'pending-date-label'
     dateLabel.textContent = formatDateDisplay(item.due_date)
     dateLabel.title = 'Clic para cambiar fecha'
     dateLabel.onclick = function(e) {
       e.stopPropagation()
-      if (dateInput.showPicker) dateInput.showPicker()
-      else dateInput.click()
+      showCustomDatePicker(dateLabel, item.due_date, async function(newDateStr) {
+        item.due_date = newDateStr
+        dateLabel.textContent = formatDateDisplay(item.due_date)
+        var newDays = getDaysLeft(item.due_date)
+        daysSpan.textContent = daysLabel(newDays)
+        card.classList.remove('urgency-low', 'urgency-mid', 'urgency-high')
+        if (!item.done) card.classList.add(urgencyClass(newDays, false))
+        flashSaving()
+        await sb.from('pending_items').update({ due_date: item.due_date }).eq('id', item.id)
+      })
     }
 
     const daysSpan = document.createElement('span')
@@ -178,7 +170,6 @@ function renderPending() {
     daysSpan.textContent = daysLabel(days)
     if (item.done) daysSpan.style.display = 'none'
 
-    dueRow.appendChild(dateInput)
     dueRow.appendChild(dateLabel)
     dueRow.appendChild(daysSpan)
     body.appendChild(titleEl)
@@ -249,4 +240,174 @@ window.addPending = async function() {
       }
     })
   }, 50)
+}
+
+// ── Custom Date Picker Popup Implementation ──────────────────────────────────────
+let activeDatePicker = null;
+
+function showCustomDatePicker(anchorEl, currentDateStr, onSelect) {
+  if (activeDatePicker) {
+    activeDatePicker.close();
+  }
+
+  // Parse target date (local date logic to avoid timezone shifting)
+  const [y, m, d] = currentDateStr.split('-').map(Number);
+  let displayedYear = y;
+  let displayedMonth = m - 1; // 0-11
+
+  // Create picker container
+  const picker = document.createElement('div');
+  picker.className = 'custom-date-picker';
+  
+  // Position the picker
+  document.body.appendChild(picker);
+  const rect = anchorEl.getBoundingClientRect();
+  const pickerWidth = 280;
+  let top = rect.bottom + window.scrollY + 6;
+  let left = rect.left + window.scrollX;
+  
+  // Keep picker in view bounds
+  if (left + pickerWidth > window.innerWidth) {
+    left = window.innerWidth - pickerWidth - 12;
+  }
+  if (left < 12) left = 12;
+  
+  picker.style.top = top + 'px';
+  picker.style.left = left + 'px';
+
+  function close() {
+    picker.remove();
+    document.removeEventListener('click', handleOutsideClick);
+    window.removeEventListener('resize', close);
+    activeDatePicker = null;
+  }
+
+  function handleOutsideClick(e) {
+    if (!picker.contains(e.target) && e.target !== anchorEl) {
+      close();
+    }
+  }
+
+  // Expose close API
+  picker.close = close;
+  activeDatePicker = picker;
+
+  // Add click-outside listener after bubble
+  setTimeout(() => {
+    document.addEventListener('click', handleOutsideClick);
+    window.addEventListener('resize', close);
+  }, 0);
+
+  const monthNames = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+
+  const weekdayNames = ['lu', 'ma', 'mi', 'ju', 'vi', 'sá', 'do'];
+
+  function renderCalendar() {
+    picker.innerHTML = '';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'cdp-header';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'cdp-nav-btn';
+    prevBtn.innerHTML = '‹';
+    prevBtn.onclick = function(e) {
+      e.stopPropagation();
+      displayedMonth--;
+      if (displayedMonth < 0) {
+        displayedMonth = 11;
+        displayedYear--;
+      }
+      renderCalendar();
+    };
+
+    const label = document.createElement('div');
+    label.className = 'cdp-month-label';
+    label.textContent = `${monthNames[displayedMonth]} ${displayedYear}`;
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'cdp-nav-btn';
+    nextBtn.innerHTML = '›';
+    nextBtn.onclick = function(e) {
+      e.stopPropagation();
+      displayedMonth++;
+      if (displayedMonth > 11) {
+        displayedMonth = 0;
+        displayedYear++;
+      }
+      renderCalendar();
+    };
+
+    header.appendChild(prevBtn);
+    header.appendChild(label);
+    header.appendChild(nextBtn);
+    picker.appendChild(header);
+
+    // Weekdays row
+    const weekdaysRow = document.createElement('div');
+    weekdaysRow.className = 'cdp-weekdays';
+    weekdayNames.forEach(name => {
+      const dayNameEl = document.createElement('div');
+      dayNameEl.textContent = name;
+      weekdaysRow.appendChild(dayNameEl);
+    });
+    picker.appendChild(weekdaysRow);
+
+    // Days grid
+    const daysGrid = document.createElement('div');
+    daysGrid.className = 'cdp-days';
+
+    // Calculate calendar days
+    const firstDayIndex = new Date(displayedYear, displayedMonth, 1).getDay(); // 0 (Sun) to 6 (Sat)
+    // Adjust first day to start with Monday (Monday = 0, Sunday = 6)
+    const adjustedFirstDay = (firstDayIndex + 6) % 7;
+    
+    const daysInMonth = new Date(displayedYear, displayedMonth + 1, 0).getDate();
+
+    // Add empty cells for offset
+    for (let i = 0; i < adjustedFirstDay; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'cdp-day cdp-empty';
+      daysGrid.appendChild(emptyCell);
+    }
+
+    const today = new Date();
+
+    // Add day cells
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayEl = document.createElement('div');
+      dayEl.className = 'cdp-day';
+      dayEl.textContent = day;
+
+      const dayStr = String(day).padStart(2, '0');
+      const monthStr = String(displayedMonth + 1).padStart(2, '0');
+      const formattedDate = `${displayedYear}-${monthStr}-${dayStr}`;
+
+      if (formattedDate === currentDateStr) {
+        dayEl.classList.add('cdp-selected');
+      }
+
+      if (today.getFullYear() === displayedYear &&
+          today.getMonth() === displayedMonth &&
+          today.getDate() === day) {
+        dayEl.classList.add('cdp-today');
+      }
+
+      dayEl.onclick = function(e) {
+        e.stopPropagation();
+        onSelect(formattedDate);
+        close();
+      };
+
+      daysGrid.appendChild(dayEl);
+    }
+
+    picker.appendChild(daysGrid);
+  }
+
+  renderCalendar();
 }

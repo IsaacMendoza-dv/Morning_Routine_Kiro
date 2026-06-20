@@ -3,7 +3,7 @@
 ;(function () {
   const canvas = document.getElementById('particles')
   const ctx    = canvas.getContext('2d')
-  const N      = 90
+  const N      = 100
   let W, H, pts
 
   const resize  = () => { W = canvas.width = innerWidth; H = canvas.height = innerHeight }
@@ -12,8 +12,8 @@
     y:  Math.random() * H,
     vx: (Math.random() - 0.5) * 0.35,
     vy: (Math.random() - 0.5) * 0.35,
-    r:  Math.random() * 1.4 + 0.4,
-    a:  Math.random() * 0.5 + 0.1
+    r:  Math.random() * 1.8 + 1.2,
+    a:  Math.random() * 0.4 + 0.4
   })
   const initPts = () => { pts = Array.from({ length: N }, mkPt) }
 
@@ -26,10 +26,10 @@
         const dx = pts[i].x - pts[j].x
         const dy = pts[i].y - pts[j].y
         const d  = Math.sqrt(dx * dx + dy * dy)
-        if (d < 130) {
+        if (d < 145) {
           ctx.beginPath()
-          ctx.strokeStyle = `rgba(0,255,170,${0.07 * (1 - d / 130)})`
-          ctx.lineWidth   = 0.5
+          ctx.strokeStyle = `rgba(0,255,170,${0.18 * (1 - d / 145)})`
+          ctx.lineWidth   = 0.8
           ctx.moveTo(pts[i].x, pts[i].y)
           ctx.lineTo(pts[j].x, pts[j].y)
           ctx.stroke()
@@ -41,7 +41,7 @@
     pts.forEach(p => {
       ctx.beginPath()
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(0,200,255,${p.a})`
+      ctx.fillStyle = `rgba(0,220,255,${p.a})`
       ctx.fill()
       p.x += p.vx
       p.y += p.vy

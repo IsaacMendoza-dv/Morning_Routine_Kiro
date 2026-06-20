@@ -128,3 +128,120 @@
   -webkit-user-select: text;
   pointer-events: auto;
 }
+
+/* Custom Date Picker Popup */
+.custom-date-picker {
+  position: absolute;
+  z-index: 9999;
+  background: rgba(8, 16, 26, 0.98);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  width: 280px;
+  font-family: 'JetBrains Mono', monospace;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 255, 170, 0.1);
+  backdrop-filter: blur(15px);
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: pickerFadeIn 0.15s ease-out;
+}
+
+@keyframes pickerFadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cdp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 255, 170, 0.1);
+  padding-bottom: 8px;
+}
+
+.cdp-month-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cdp-nav-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.cdp-nav-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0, 255, 170, 0.05);
+}
+
+.cdp-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.6rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.cdp-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+
+.cdp-day {
+  font-size: 0.7rem;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text);
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+
+.cdp-day:hover:not(.cdp-empty) {
+  background: rgba(0, 170, 255, 0.15);
+  color: #fff;
+  border-color: rgba(0, 170, 255, 0.3);
+}
+
+.cdp-day.cdp-selected {
+  background: var(--accent2);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(0, 170, 255, 0.4);
+}
+
+.cdp-day.cdp-today {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.cdp-day.cdp-empty {
+  cursor: default;
+  color: transparent;
+  pointer-events: none;
+}
