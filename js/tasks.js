@@ -31,6 +31,24 @@ async function loadTasks() {
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
+  // Capture active element focus info
+  const activeEl = document.activeElement;
+  let activeId = null;
+  let activeType = null; // 'duration' or 'name'
+  let selStart = 0;
+  let selEnd = 0;
+
+  if (activeEl && document.getElementById('taskList')?.contains(activeEl)) {
+    activeId = activeEl.dataset.id;
+    if (activeEl.tagName === 'INPUT') {
+      activeType = 'duration';
+      selStart = activeEl.selectionStart;
+      selEnd = activeEl.selectionEnd;
+    } else if (activeEl.classList.contains('task-name')) {
+      activeType = 'name';
+    }
+  }
+
   const list = document.getElementById('taskList')
   list.innerHTML = ''
   const [sh, sm] = startTime.split(':').map(Number)
@@ -62,6 +80,30 @@ function render() {
 
   updateProgress()
   updateTotalInfo(cursor, sh * 60 + sm)
+
+  // Restore focus
+  if (activeId) {
+    if (activeType === 'duration') {
+      const el = document.querySelector(`input[data-id="${activeId}"]`);
+      if (el) {
+        el.focus();
+        try {
+          el.setSelectionRange(selStart, selEnd);
+        } catch (e) {}
+      }
+    } else if (activeType === 'name') {
+      const el = document.querySelector(`.task-name[data-id="${activeId}"]`);
+      if (el) {
+        el.focus();
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+  }
 }
 
 function updateProgress() {
