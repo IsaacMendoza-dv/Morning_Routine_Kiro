@@ -69,6 +69,7 @@ function renderPending() {
 
     const card = document.createElement('div')
     card.className = 'pending-card ' + urg + (item.done ? ' done' : '')
+    card.dataset.id = item.id
 
     // Checkbox
     const check = document.createElement('div')
@@ -217,10 +218,9 @@ window.addPending = async function() {
   renderPending()
 
   setTimeout(function() {
-    var cards = document.querySelectorAll('.pending-card')
-    var last  = cards[cards.length - 1]
-    if (!last) return
-    var titleEl = last.querySelector('.pending-title')
+    var newCard = document.querySelector(`.pending-card[data-id="${data.id}"]`)
+    if (!newCard) return
+    var titleEl = newCard.querySelector('.pending-title')
     if (!titleEl) return
     titleEl.contentEditable = 'true'
     titleEl.focus()
