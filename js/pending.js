@@ -226,8 +226,3 @@ window.addPending = async function () {
     })
   }, 50)
 }
-// Exponer para acceso global
-Object.defineProperty(window, 'pendingItems', {
-  get: () => pendingItems,
-  set: (v) => { pendingItems = v }
-})
