@@ -1,11 +1,9 @@
 // main.js - Supabase client, autenticacion, inicio de app
-// Dependencias: tasks.js, pending.js, mood.js, widgets.js, countdown.js, particles.js
 
 const SUPABASE_URL = 'https://ysoaipscjkuritviyopf.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_DjojLjFLN5y7F2NytE0JQA_RUIs-Xrf'
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
-// ── Saving indicator ──────────────────────────────────────────────────────────
 let _saveTimer = null
 function flashSaving() {
   const el = document.getElementById('savingIndicator')
@@ -14,45 +12,45 @@ function flashSaving() {
   _saveTimer = setTimeout(() => el.classList.remove('visible'), 1200)
 }
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
 let _appLoaded = false
 
-async function init() {
-  const { data: { session } } = await sb.auth.getSession()
-  if (session) {
-    if (!_appLoaded) {
-      _appLoaded = true
-      await showApp()
-    }
-  } else {
-    showAuth()
-  }
+function showAuth() {
+  document.getElementById('authScreen').style.display = 'flex'
+  document.getElementById('appScreen').style.display  = 'none'
 }
 
-async function init() {
-  sb.auth.onAuthStateChange((_e, session) => {
-    if (session) {
-      if (session.provider_token) localStorage.setItem('mr_gtoken', session.provider_token)
-      if (!_appLoaded) {
-        _appLoaded = true
-        showApp()
-      }
-    } else {
-      _appLoaded = false
-      showAuth()
-    }
+async function showApp() {
+  await new Promise(resolve => {
+    if (document.readyState === 'complete') resolve()
+    else window.addEventListener('load', resolve, { once: true })
   })
 
-  const { data: { session } } = await sb.auth.getSession()
+  document.getElementById('authScreen').style.display = 'none'
+  document.getElementById('appScreen').style.display  = 'block'
+  document.getElementById('startTime').value = localStorage.getItem('mr_startTime') || '05:30'
+
+  await loadTasks()
+  render()
+  updateCountdown()
+  setInterval(updateCountdown, 1000)
+  fetchWeather()
+  fetchCalendar()
+  loadMood()
+  loadPending()
+}
+
+sb.auth.onAuthStateChange((_e, session) => {
   if (session) {
+    if (session.provider_token) localStorage.setItem('mr_gtoken', session.provider_token)
     if (!_appLoaded) {
       _appLoaded = true
-      await showApp()
+      showApp()
     }
   } else {
+    _appLoaded = false
     showAuth()
   }
-}
+})
 
 document.getElementById('btnGoogle').addEventListener('click', async () => {
   const btn = document.getElementById('btnGoogle')
@@ -83,30 +81,3 @@ document.getElementById('btnSignOut').addEventListener('click', async () => {
   _appLoaded = false
   await sb.auth.signOut()
 })
-
-function showAuth() {
-  document.getElementById('authScreen').style.display = 'flex'
-  document.getElementById('appScreen').style.display  = 'none'
-}
-
-async function showApp() {
-  document.getElementById('authScreen').style.display = 'none'
-  document.getElementById('appScreen').style.display  = 'block'
-
-  document.getElementById('startTime').value = localStorage.getItem('mr_startTime') || '05:30'
-
-  await loadTasks()
-  render()
-  updateCountdown()
-  setInterval(updateCountdown, 1000)
-  fetchWeather()
-  fetchCalendar()
-  loadMood()
-  loadPending()
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init)
-} else {
-  init()
-}
