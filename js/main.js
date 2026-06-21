@@ -36,7 +36,7 @@ async function showApp() {
   fetchWeather()
   fetchCalendar()
   loadMood()
-  loadPending()
+  window.dispatchEvent(new Event('app:ready'))
 }
 
 sb.auth.onAuthStateChange((_e, session) => {

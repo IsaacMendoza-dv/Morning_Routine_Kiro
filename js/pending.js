@@ -411,3 +411,5 @@ function showCustomDatePicker(anchorEl, currentDateStr, onSelect) {
 
   renderCalendar();
 }
+
+window.addEventListener('app:ready', loadPending)
