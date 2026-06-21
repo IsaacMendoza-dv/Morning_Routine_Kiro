@@ -187,7 +187,7 @@ function renderPending() {
       })
       card.remove()
       flashSaving()
-      sb.from('pending_items').delete().eq('id', item.id)
+      await sb.from('pending_items').delete().eq('id', item.id)
       if (window.pendingItems.length === 0) renderPending()
     }
 
