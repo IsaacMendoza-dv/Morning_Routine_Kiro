@@ -26,9 +26,9 @@ function urgencyClass(days, done) {
 }
 
 function daysLabel(days) {
-  if (days < 0)   return 'vencio hace ' + Math.abs(days) + (Math.abs(days) !== 1 ? ' dias' : ' dia')
-  if (days === 0) return 'vence hoy!'
-  if (days === 1) return 'vence manana'
+  if (days < 0)   return 'venci\u00F3 hace ' + Math.abs(days) + (Math.abs(days) !== 1 ? ' d\u00EDas' : ' d\u00EDa')
+  if (days === 0) return '\u00A1vence hoy!'
+  if (days === 1) return 'vence ma\u00F1ana'
   return days + ' dias'
 }
 
