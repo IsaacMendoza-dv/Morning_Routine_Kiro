@@ -22,24 +22,22 @@ async function loadMood() {
   if (data?.mood) applyMoodUI(data.mood, true)
 }
 
-function applyMoodUI(mood, locked = true) {
+function applyMoodUI(mood, locked = false) {
   document.querySelectorAll('.mood-btn').forEach(b => {
     b.classList.toggle('selected', b.dataset.mood === mood)
-    if (locked) b.disabled = true
+    b.disabled = false
   })
   const label = document.querySelector(`.mood-btn[data-mood="${mood}"]`)?.dataset.label || mood
-  document.getElementById('moodSaved').textContent = locked
-    ? `✓ registrado: ${label} — solo se puede registrar una vez al día`
-    : `✓ registrado: ${label}`
+  document.getElementById('moodSaved').textContent = `✓ registrado: ${label} — puedes actualizarlo cuando quieras`
 }
 
 // ── Events ────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.mood-btn').forEach(btn => {
   btn.addEventListener('click', async () => {
     if (btn.disabled) return
-    document.querySelectorAll('.mood-btn').forEach(b => b.disabled = true)
+    // Elimina esta línea: document.querySelectorAll('.mood-btn').forEach(b => b.disabled = true)
     const mood = btn.dataset.mood
     await logDay({ mood, tasks_total: tasks.length, tasks_done: tasks.filter(t => t.done).length }).catch(() => {})
-    applyMoodUI(mood, true)
+    applyMoodUI(mood, false)
   })
 })
