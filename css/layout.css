@@ -67,6 +67,7 @@ header {
   display: flex; justify-content: space-between; align-items: flex-start;
   margin-bottom: 36px; flex-wrap: wrap; gap: 16px;
 }
+
 @media (max-width: 500px) {
   header {
     flex-direction: column;
