@@ -1,4 +1,4 @@
-// ── main.js — Supabase client, autenticación, inicio de app ──────────────────
+// main.js - Supabase client, autenticacion, inicio de app
 // Dependencias: tasks.js, pending.js, mood.js, widgets.js, countdown.js, particles.js
 
 const SUPABASE_URL = 'https://ysoaipscjkuritviyopf.supabase.co'
@@ -15,17 +15,29 @@ function flashSaving() {
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
+let _appLoaded = false
+
 async function init() {
   const { data: { session } } = await sb.auth.getSession()
-  if (session) showApp()
-  else showAuth()
+  if (session) {
+    if (!_appLoaded) {
+      _appLoaded = true
+      await showApp()
+    }
+  } else {
+    showAuth()
+  }
 }
 
 sb.auth.onAuthStateChange((_e, session) => {
   if (session) {
     if (session.provider_token) localStorage.setItem('mr_gtoken', session.provider_token)
-    showApp()
+    if (!_appLoaded) {
+      _appLoaded = true
+      showApp()
+    }
   } else {
+    _appLoaded = false
     showAuth()
   }
 })
@@ -56,6 +68,7 @@ document.getElementById('btnGoogle').addEventListener('click', async () => {
 })
 
 document.getElementById('btnSignOut').addEventListener('click', async () => {
+  _appLoaded = false
   await sb.auth.signOut()
 })
 
@@ -70,14 +83,14 @@ async function showApp() {
 
   document.getElementById('startTime').value = localStorage.getItem('mr_startTime') || '05:30'
 
-  await loadTasks()     // tasks.js
-  render()              // tasks.js
-  updateCountdown()     // countdown.js
+  await loadTasks()
+  render()
+  updateCountdown()
   setInterval(updateCountdown, 1000)
-  fetchWeather()        // widgets.js
-  fetchCalendar()       // widgets.js
-  loadMood()            // mood.js
-  loadPending()         // pending.js
+  fetchWeather()
+  fetchCalendar()
+  loadMood()
+  loadPending()
 }
 
 init()
