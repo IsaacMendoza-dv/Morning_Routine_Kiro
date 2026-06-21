@@ -29,18 +29,30 @@ async function init() {
   }
 }
 
-sb.auth.onAuthStateChange((_e, session) => {
+async function init() {
+  sb.auth.onAuthStateChange((_e, session) => {
+    if (session) {
+      if (session.provider_token) localStorage.setItem('mr_gtoken', session.provider_token)
+      if (!_appLoaded) {
+        _appLoaded = true
+        showApp()
+      }
+    } else {
+      _appLoaded = false
+      showAuth()
+    }
+  })
+
+  const { data: { session } } = await sb.auth.getSession()
   if (session) {
-    if (session.provider_token) localStorage.setItem('mr_gtoken', session.provider_token)
     if (!_appLoaded) {
       _appLoaded = true
-      showApp()
+      await showApp()
     }
   } else {
-    _appLoaded = false
     showAuth()
   }
-})
+}
 
 document.getElementById('btnGoogle').addEventListener('click', async () => {
   const btn = document.getElementById('btnGoogle')
@@ -93,4 +105,8 @@ async function showApp() {
   loadPending()
 }
 
-init()
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init)
+} else {
+  init()
+}
