@@ -20,6 +20,13 @@ function showAuth() {
 }
 
 async function showApp() {
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user || user.email !== 'ca.isaac.mendoza@gmail.com') {
+    await sb.auth.signOut()
+    document.getElementById('authMsg').textContent = 'Acceso no autorizado.'
+    showAuth()
+    return
+  }
   await new Promise(resolve => {
     if (document.readyState === 'complete') resolve()
     else window.addEventListener('load', resolve, { once: true })
