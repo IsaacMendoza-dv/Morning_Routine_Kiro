@@ -75,28 +75,28 @@ function renderPending() {
     const check = document.createElement('div')
     check.className = 'pending-check' + (item.done ? ' checked' : '')
 
-    check.onclick = function() {
+  check.onclick = async function() {
     if (document.activeElement) document.activeElement.blur()
-      var found = null
-      for (var i = 0; i < window.pendingItems.length; i++) {
-        if (String(window.pendingItems[i].id) === String(item.id)) {
-          found = window.pendingItems[i]
-          break
-        }
+    var found = null
+    for (var i = 0; i < window.pendingItems.length; i++) {
+      if (String(window.pendingItems[i].id) === String(item.id)) {
+        found = window.pendingItems[i]
+        break
       }
-      if (!found) {
-        console.log('item no encontrado, id:', item.id)
-        return
-      }
-      found.done = !found.done
-      check.classList.toggle('checked', found.done)
-      card.classList.toggle('done', found.done)
-      daysSpan.style.display = found.done ? 'none' : ''
-      card.classList.remove('urgency-low', 'urgency-mid', 'urgency-high')
-      if (!found.done) card.classList.add(urgencyClass(getDaysLeft(found.due_date), false))
-      flashSaving()
-      sb.from('pending_items').update({ done: found.done }).eq('id', found.id)
     }
+    if (!found) {
+      console.log('item no encontrado, id:', item.id)
+      return
+    }
+    found.done = !found.done
+    check.classList.toggle('checked', found.done)
+    card.classList.toggle('done', found.done)
+    daysSpan.style.display = found.done ? 'none' : ''
+    card.classList.remove('urgency-low', 'urgency-mid', 'urgency-high')
+    if (!found.done) card.classList.add(urgencyClass(getDaysLeft(found.due_date), false))
+    flashSaving()
+    await sb.from('pending_items').update({ done: found.done }).eq('id', found.id)
+}
 
     // Body
     const body = document.createElement('div')
