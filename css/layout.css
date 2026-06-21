@@ -70,23 +70,45 @@ header {
 @media (max-width: 500px) {
   header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+    text-align: center;
   }
-  .header-left, .header-right {
+  .header-left {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .header-left .date {
+    text-align: center;
+  }
+  .calendar-bar {
+    width: 100%;
+    max-width: 100% !important;
+    margin-top: 12px;
   }
   .header-right {
+    width: 100%;
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
   }
   .countdown-block {
-    text-align: left;
+    text-align: center;
+    width: 100%;
+  }
+  .countdown-time {
+    font-size: 3.5rem;
+  }
+  .countdown-label {
+    text-align: center;
+  }
+  .start-config {
+    justify-content: center;
   }
   .btn-signout {
-    align-self: flex-start;
-    margin-top: 4px;
+    align-self: center;
   }
 }
 .header-left h1 { font-size: 1.1rem; font-weight: 400; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
