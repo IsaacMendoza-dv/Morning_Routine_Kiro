@@ -181,7 +181,7 @@ function renderPending() {
     const delBtn = document.createElement('button')
     delBtn.className = 'btn-del-pending'
     delBtn.textContent = 'x'
-    delBtn.onclick = function() {
+    delBtn.onclick = async function() {
       window.pendingItems = window.pendingItems.filter(function(p) {
         return String(p.id) !== String(item.id)
       })
