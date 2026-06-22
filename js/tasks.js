@@ -27,6 +27,21 @@ async function loadTasks() {
   } else {
     tasks = data
   }
+
+  // Reset automatico si es un dia nuevo
+  const today = new Date().toISOString().slice(0, 10)
+  const lastReset = localStorage.getItem('mr_lastReset')
+
+  if (lastReset !== today) {
+    localStorage.setItem('mr_lastReset', today)
+    const doneTasks = tasks.filter(t => t.done)
+    if (doneTasks.length > 0) {
+      tasks.forEach(t => t.done = false)
+      await Promise.all(
+        doneTasks.map(t => sb.from('tasks').update({ done: false }).eq('id', t.id))
+      )
+    }
+  }
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
