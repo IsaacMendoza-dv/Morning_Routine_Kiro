@@ -95,7 +95,8 @@ function renderPending() {
     card.classList.remove('urgency-low', 'urgency-mid', 'urgency-high')
     if (!found.done) card.classList.add(urgencyClass(getDaysLeft(found.due_date), false))
     flashSaving()
-    await sb.from('pending_items').update({ done: found.done }).eq('id', found.id)
+    const completedAt = found.done ? new Date().toISOString() : null
+await sb.from('pending_items').update({ done: found.done, completed_at: completedAt }).eq('id', found.id)
 }
 
     // Body
@@ -413,3 +414,48 @@ function showCustomDatePicker(anchorEl, currentDateStr, onSelect) {
 }
 
 window.addEventListener('app:ready', loadPending)
+
+window.togglePendingHistory = async function() {
+  const panel = document.getElementById('pendingHistoryPanel')
+  const arrow = document.getElementById('pendingHistoryArrow')
+  const isOpen = panel.classList.toggle('open')
+  arrow.textContent = isOpen ? '▼' : '▶'
+  if (!isOpen) return
+
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return
+
+  const { data, error } = await sb.from('pending_items')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('done', true)
+    .order('completed_at', { ascending: false })
+
+  if (error) { console.error(error); return }
+
+  if (!data || data.length === 0) {
+    panel.innerHTML = '<div class="history-empty">aún no hay pendientes completados</div>'
+    return
+  }
+
+  panel.innerHTML = data.map(function(item) {
+    const completedDate = item.completed_at
+      ? new Date(item.completed_at).toLocaleDateString('es-MX', {
+          weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+        })
+      : 'fecha desconocida'
+    const dueDate = formatDateDisplay(item.due_date)
+    const days = getDaysLeft(item.due_date)
+    const onTime = days >= 0 ? '\u2705 a tiempo' : '\u26A0\uFE0F tarde'
+
+    return `
+      <div class="history-row" style="grid-template-columns: 1fr auto auto">
+        <span class="history-date" style="color:var(--text);font-size:0.75rem">${item.title}</span>
+        <span style="font-size:0.62rem;color:var(--muted)">l\u00EDmite: ${dueDate}</span>
+        <span style="font-size:0.62rem;color:var(--accent)">${onTime}</span>
+        <span class="history-date" style="grid-column:1/-1;font-size:0.6rem;margin-top:2px">
+          completado el ${completedDate}
+        </span>
+      </div>`
+  }).join('')
+}
