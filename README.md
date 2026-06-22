@@ -166,6 +166,29 @@ Morning_Routine_Kiro/
 | 🟡 Amarillo | `urgency-mid` | 4 a 7 días |
 | 🔴 Rojo | `urgency-high` | 3 días o menos / vencido |
 
+## Paleta de colores
+
+Todas las variables están definidas en `css/base.css` bajo `:root`.
+
+| Variable | Valor | Uso |
+|---|---|---|
+| `--bg` | `#060a0f` | Fondo principal de la app |
+| `--surface` | `rgba(10,18,28,0.75)` | Fondo de tarjetas y paneles |
+| `--border` | `rgba(0,255,170,0.18)` | Bordes de tarjetas |
+| `--accent` | `#00ffaa` | Color principal — checkmarks, progreso, urgencia baja |
+| `--accent2` | `#00aaff` | Color secundario — fechas, barra de progreso, gradientes |
+| `--warn` | `#ffaa00` | Urgencia media — pendientes de 4 a 7 días |
+| `--danger` | `#ff4466` | Urgencia alta — pendientes de 3 días o menos |
+| `--text` | `#c8d8e8` | Texto principal |
+| `--muted` | `#4a6070` | Texto secundario, labels, íconos desactivados |
+
+### Estética general
+- Fondo oscuro casi negro con tonos azul noche
+- Tipografía monospace (JetBrains Mono) estilo terminal
+- Acentos en verde neón y azul eléctrico
+- Efecto de líneas de escaneo (scanlines) sobre toda la pantalla
+- Partículas animadas conectadas con líneas verdes translúcidas
+
 ---
 
 ## Deploy
